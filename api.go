@@ -2,6 +2,7 @@ package b2
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -21,6 +22,17 @@ type authResponse struct {
 	DownloadUrl        string `json:"downloadUrl"`
 }
 
+type errorResponse struct {
+	Status  int64  `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+func (e errorResponse) Error() string {
+	return fmt.Sprintf("Status: %d, Code: %s, Message: %s",
+		e.Status, e.Code, e.Message)
+}
+
 func MakeB2(accountId, appKey string) (*B2, error) {
 	req, err := http.NewRequest("GET",
 		"https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
@@ -37,23 +49,30 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 	}
 	defer resp.Body.Close()
 
-	// TODO handle response errors
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return &B2{}, err
 	}
 
-	authJson := authResponse{}
-	if err := json.Unmarshal(body, authJson); err != nil {
-		return &B2{}, err
-	}
+	if resp.StatusCode == 200 {
+		authJson := authResponse{}
+		if err := json.Unmarshal(body, authJson); err != nil {
+			return &B2{}, err
+		}
 
-	return &B2{
-		AccountID:          authJson.AccountID,
-		ApplicationKey:     appKey,
-		AuthorizationToken: authJson.AuthorizationToken,
-		ApiUrl:             authJson.ApiUrl,
-		DownloadUrl:        authJson.DownloadUrl,
-	}, nil
+		return &B2{
+			AccountID:          authJson.AccountID,
+			ApplicationKey:     appKey,
+			AuthorizationToken: authJson.AuthorizationToken,
+			ApiUrl:             authJson.ApiUrl,
+			DownloadUrl:        authJson.DownloadUrl,
+		}, nil
+	} else {
+		errorJson := errorResponse{}
+		if err := json.Unmarshal(body, errorJson); err != nil {
+			return &B2{}, err
+		}
+
+		return &B2{}, errorJson
+	}
 }
