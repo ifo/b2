@@ -16,18 +16,18 @@ const (
 	AllPublic  BucketType = "allPublic"
 )
 
-func (b *B2) ListBuckets() ([]*Bucket, error) {
-
+func (b *B2) ListBuckets() ([]Bucket, error) {
+	return []Bucket{}, nil
 }
 
 func (b *B2) CreateBucket(name string, bType BucketType) (*Bucket, error) {
-
+	return &Bucket{}, nil
 }
 
 func (b *Bucket) Update(bType BucketType) (*Bucket, error) {
-
+	return &Bucket{}, nil
 }
 
 func (b *Bucket) Delete() error {
-
+	return nil
 }

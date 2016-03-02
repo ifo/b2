@@ -21,36 +21,36 @@ type File struct {
 }
 
 func (b *Bucket) ListFileNames(startFileName string,
-	maxFileCount int64) ([]*FileMeta, error) {
-
+	maxFileCount int64) ([]FileMeta, error) {
+	return []FileMeta{}, nil
 }
 
 func (b *Bucket) ListFileVersions(startFileName, startFileID string,
-	maxFileCount int64) ([]*FileMeta, error) {
-
+	maxFileCount int64) ([]FileMeta, error) {
+	return []FileMeta{}, nil
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-
+	return &File{}, nil
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
-
+	return &File{}, nil
 }
 
 func (b *Bucket) UploadFile(name string, fileInfo map[string]string,
 	file io.Reader) error {
-
+	return nil
 }
 
 func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
-
+	return &FileMeta{}, nil
 }
 
 func (b *Bucket) HideFile(fileName string) error {
-
+	return nil
 }
 
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) error {
-
+	return nil
 }

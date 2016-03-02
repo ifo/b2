@@ -11,5 +11,5 @@ type B2 struct {
 }
 
 func MakeB2(accountId, appKey string) (*B2, error) {
-
+	return &B2{}, nil
 }
