@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+// basic httpClient and protocol - overwritten for test mocking
+var httpClient = http.Client{}
+var protocol = "https"
+
 type B2 struct {
 	AccountID          string
 	ApplicationKey     string
@@ -22,6 +26,7 @@ type authResponse struct {
 	DownloadUrl        string `json:"downloadUrl"`
 }
 
+// TODO make error public, add checking for error type
 type errorResponse struct {
 	Status  int64  `json:"status"`
 	Code    string `json:"code"`
@@ -35,15 +40,14 @@ func (e errorResponse) Error() string {
 
 func MakeB2(accountId, appKey string) (*B2, error) {
 	req, err := http.NewRequest("GET",
-		"https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
+		protocol+"://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
 	if err != nil {
 		return &B2{}, err
 	}
 
 	req.SetBasicAuth(accountId, appKey)
 
-	c := http.Client{}
-	resp, err := c.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return &B2{}, err
 	}
@@ -56,7 +60,7 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 
 	if resp.StatusCode == 200 {
 		authJson := authResponse{}
-		if err := json.Unmarshal(body, authJson); err != nil {
+		if err := json.Unmarshal(body, &authJson); err != nil {
 			return &B2{}, err
 		}
 
