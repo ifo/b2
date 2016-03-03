@@ -43,9 +43,8 @@ func Test_MakeB2_400(t *testing.T) {
 	if err.Error() != "Status: 400, Code: nope, Message: nope nope" {
 		t.Errorf(`Expected "Status: 400, Code: nope, Message: nope nope", instead got %s`, err)
 	}
-	bCompare := B2{}
-	if *b != bCompare {
-		t.Errorf("Expected *b to be empty, instead got %+v", *b)
+	if b != nil {
+		t.Errorf("Expected b to be empty, instead got %+v", b)
 	}
 }
 
@@ -60,9 +59,8 @@ func Test_MakeB2_401(t *testing.T) {
 	if err.Error() != "Status: 401, Code: nope, Message: nope nope" {
 		t.Errorf(`Expected "Status: 401, Code: nope, Message: nope nope", instead got %s`, err)
 	}
-	bCompare := B2{}
-	if *b != bCompare {
-		t.Errorf("Expected *b to be empty, instead got %+v", *b)
+	if b != nil {
+		t.Errorf("Expected b to be empty, instead got %+v", b)
 	}
 }
 

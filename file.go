@@ -22,20 +22,20 @@ type File struct {
 
 func (b *Bucket) ListFileNames(startFileName string,
 	maxFileCount int64) ([]FileMeta, error) {
-	return []FileMeta{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) ListFileVersions(startFileName, startFileID string,
 	maxFileCount int64) ([]FileMeta, error) {
-	return []FileMeta{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	return &File{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
-	return &File{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) UploadFile(name string, fileInfo map[string]string,
@@ -44,7 +44,7 @@ func (b *Bucket) UploadFile(name string, fileInfo map[string]string,
 }
 
 func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
-	return &FileMeta{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) HideFile(fileName string) error {

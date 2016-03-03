@@ -17,15 +17,15 @@ const (
 )
 
 func (b *B2) ListBuckets() ([]Bucket, error) {
-	return []Bucket{}, nil
+	return nil, nil
 }
 
 func (b *B2) CreateBucket(name string, bType BucketType) (*Bucket, error) {
-	return &Bucket{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) Update(bType BucketType) (*Bucket, error) {
-	return &Bucket{}, nil
+	return nil, nil
 }
 
 func (b *Bucket) Delete() error {
