@@ -73,7 +73,7 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 		}, nil
 	} else {
 		errorJson := errorResponse{}
-		if err := json.Unmarshal(body, errorJson); err != nil {
+		if err := json.Unmarshal(body, &errorJson); err != nil {
 			return &B2{}, err
 		}
 

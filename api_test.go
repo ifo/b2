@@ -32,11 +32,38 @@ func Test_MakeB2_200(t *testing.T) {
 }
 
 func Test_MakeB2_400(t *testing.T) {
-	t.Skip()
+	s := setupRequest(400,
+		`{"status":400,"code":"nope","message":"nope nope"}`)
+	defer s.Close()
+
+	b, err := MakeB2("1", "1")
+	if err == nil {
+		t.Fatal("Expected error, no error received")
+	}
+	if err.Error() != "Status: 400, Code: nope, Message: nope nope" {
+		t.Errorf(`Expected "Status: 400, Code: nope, Message: nope nope", instead got %s`, err)
+	}
+	bCompare := B2{}
+	if *b != bCompare {
+		t.Errorf("Expected *b to be empty, instead got %+v", *b)
+	}
 }
 
 func Test_MakeB2_401(t *testing.T) {
-	t.Skip()
+	s := setupRequest(401, `{"status":401,"code":"nope","message":"nope nope"}`)
+	defer s.Close()
+
+	b, err := MakeB2("1", "1")
+	if err == nil {
+		t.Fatal("Expected error, no error received")
+	}
+	if err.Error() != "Status: 401, Code: nope, Message: nope nope" {
+		t.Errorf(`Expected "Status: 401, Code: nope, Message: nope nope", instead got %s`, err)
+	}
+	bCompare := B2{}
+	if *b != bCompare {
+		t.Errorf("Expected *b to be empty, instead got %+v", *b)
+	}
 }
 
 func setupRequest(code int, body string) *httptest.Server {
