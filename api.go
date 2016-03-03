@@ -64,3 +64,11 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 		return nil, errJson
 	}
 }
+
+func (b *B2) MakeApiUrl(urlPart string) string {
+	return replaceProtocol(b.ApiUrl + urlPart)
+}
+
+func (b *B2) MakeDownloadUrl(urlPart string) string {
+	return replaceProtocol(b.DownloadUrl + urlPart)
+}
