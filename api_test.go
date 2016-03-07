@@ -14,7 +14,7 @@ func Test_MakeB2_200(t *testing.T) {
 
 	b, err := MakeB2("1", "1")
 	if err != nil {
-		t.Fatalf("No error expected, instead got %s", err)
+		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
 	if b.AccountID != "1" {
