@@ -1,12 +1,16 @@
 package b2
 
-import ()
+import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+)
 
 type Bucket struct {
-	BucketID   string
-	BucketName string
-	BucketType BucketType
-	B2         *B2
+	BucketID   string     `json:"bucketId"`
+	BucketName string     `json:"bucketName"`
+	BucketType BucketType `json:"bucketType"`
+	B2         *B2        `json:"-"`
 }
 
 type BucketType string
@@ -16,8 +20,49 @@ const (
 	AllPublic  BucketType = "allPublic"
 )
 
+type listBuckets struct {
+	Buckets []Bucket `json:"buckets"`
+}
+
 func (b *B2) ListBuckets() ([]Bucket, error) {
-	return nil, nil
+	req, err := http.NewRequest(
+		"GET", b.MakeApiUrl("/b2api/v1/b2_list_buckets"), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", b.AuthorizationToken)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == 200 {
+		buckets := listBuckets{}
+		if err := json.Unmarshal(body, &buckets); err != nil {
+			return nil, err
+		}
+
+		for i := range buckets.Buckets {
+			buckets.Buckets[i].B2 = b
+		}
+
+		return buckets.Buckets, nil
+	} else {
+		errJson := errorResponse{}
+		if err := json.Unmarshal(body, &errJson); err != nil {
+			return nil, err
+		}
+
+		return nil, errJson
+	}
 }
 
 func (b *B2) CreateBucket(name string, bType BucketType) (*Bucket, error) {
