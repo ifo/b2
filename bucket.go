@@ -1,6 +1,7 @@
 package b2
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -24,9 +25,21 @@ type listBucketsResponse struct {
 	Buckets []Bucket `json:"buckets"`
 }
 
+type bucketRequest struct {
+	AccountID  string     `json:"accountId"`
+	BucketID   string     `json:"bucketId,omitempty"`
+	BucketName string     `json:"bucketName,omitempty"`
+	BucketType BucketType `json:"bucketType,omitempty"`
+}
+
 func (b *B2) ListBuckets() ([]Bucket, error) {
+	reqBody, err := json.Marshal(bucketRequest{AccountID: b.AccountID})
+	if err != nil {
+		return nil, err
+	}
+
 	req, err := http.NewRequest(
-		"GET", b.MakeApiUrl("/b2api/v1/b2_list_buckets"), nil)
+		"POST", b.MakeApiUrl("/b2api/v1/b2_list_buckets"), bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, err
 	}
