@@ -20,7 +20,7 @@ const (
 	AllPublic  BucketType = "allPublic"
 )
 
-type listBuckets struct {
+type listBucketsResponse struct {
 	Buckets []Bucket `json:"buckets"`
 }
 
@@ -45,7 +45,7 @@ func (b *B2) ListBuckets() ([]Bucket, error) {
 	}
 
 	if resp.StatusCode == 200 {
-		buckets := listBuckets{}
+		buckets := listBucketsResponse{}
 		if err := json.Unmarshal(body, &buckets); err != nil {
 			return nil, err
 		}
