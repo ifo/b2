@@ -86,3 +86,12 @@ func testErrorResponse(err error, code int, t *testing.T) {
 			code, err)
 	}
 }
+
+func makeTestB2() *B2 {
+	return &B2{
+		AccountID:          "1",
+		AuthorizationToken: "1",
+		ApiUrl:             "https://api900.backblaze.com",
+		DownloadUrl:        "https://f900.backblaze.com",
+	}
+}

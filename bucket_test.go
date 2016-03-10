@@ -4,13 +4,8 @@ import (
 	"testing"
 )
 
-func Test_ListBuckets_200(t *testing.T) {
-	b := &B2{
-		AccountID:          "1",
-		AuthorizationToken: "1",
-		ApiUrl:             "https://api001.backblaze.com",
-	}
-
+func Test_B2_ListBuckets_Success(t *testing.T) {
+	b := makeTestB2()
 	s := setupRequest(200, `{"buckets": [{
     "bucketId": "id",
     "accountId": "id",
@@ -40,13 +35,9 @@ func Test_ListBuckets_200(t *testing.T) {
 	}
 }
 
-func Test_ListBuckets_Errors(t *testing.T) {
+func Test_B2_ListBuckets_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := &B2{
-		AccountID:          "1",
-		AuthorizationToken: "1",
-		ApiUrl:             "https://api001.backblaze.com",
-	}
+	b := makeTestB2()
 
 	for i := range codes {
 		s := setupRequest(codes[i], bodies[i])
@@ -54,7 +45,7 @@ func Test_ListBuckets_Errors(t *testing.T) {
 		buckets, err := b.ListBuckets()
 		testErrorResponse(err, codes[i], t)
 		if buckets != nil {
-			t.Errorf("Expected b to be empty, instead got %+v", buckets)
+			t.Errorf("Expected buckets to be empty, instead got %+v", buckets)
 		}
 
 		s.Close()
