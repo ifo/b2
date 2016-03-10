@@ -64,7 +64,7 @@ func (b *B2) MakeRequest(method, url string, request, response interface{}) erro
 		return err
 	}
 
-	resp, err := httpClient.Do(req)
+	resp, err := httpClientDo(req)
 	if err != nil {
 		return err
 	}

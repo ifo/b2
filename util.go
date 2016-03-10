@@ -11,12 +11,15 @@ var httpClient = http.Client{}
 var protocol = "https"
 
 // global wrapper functions
-func clientDo(req *http.Request) (*http.Response, error) {
+func httpClientDo(req *http.Request) (*http.Response, error) {
 	return httpClient.Do(req)
 }
 
 func replaceProtocol(url string) string {
 	protoTrim := strings.Index(url, ":")
+	if protoTrim == -1 {
+		return url
+	}
 	return protocol + url[protoTrim:]
 }
 
