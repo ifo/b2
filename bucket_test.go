@@ -40,48 +40,23 @@ func Test_ListBuckets_200(t *testing.T) {
 	}
 }
 
-func Test_ListBuckets_400(t *testing.T) {
+func Test_ListBuckets_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
 	b := &B2{
 		AccountID:          "1",
 		AuthorizationToken: "1",
 		ApiUrl:             "https://api001.backblaze.com",
 	}
 
-	s := setupRequest(400,
-		`{"status":400,"code":"nope","message":"nope nope"}`)
-	defer s.Close()
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
 
-	buckets, err := b.ListBuckets()
-	if err == nil {
-		t.Fatal("Expected error, no error received")
-	}
-	if err.Error() != "Status: 400, Code: nope, Message: nope nope" {
-		t.Errorf(`Expected "Status: 400, Code: nope, Message: nope nope", instead got %s`, err)
-	}
-	if buckets != nil {
-		t.Errorf("Expected b to be empty, instead got %+v", buckets)
-	}
-}
+		buckets, err := b.ListBuckets()
+		testErrorResponse(err, codes[i], t)
+		if buckets != nil {
+			t.Errorf("Expected b to be empty, instead got %+v", buckets)
+		}
 
-func Test_ListBuckets_401(t *testing.T) {
-	b := &B2{
-		AccountID:          "1",
-		AuthorizationToken: "1",
-		ApiUrl:             "https://api001.backblaze.com",
-	}
-
-	s := setupRequest(401,
-		`{"status":401,"code":"nope","message":"nope nope"}`)
-	defer s.Close()
-
-	buckets, err := b.ListBuckets()
-	if err == nil {
-		t.Fatal("Expected error, no error received")
-	}
-	if err.Error() != "Status: 401, Code: nope, Message: nope nope" {
-		t.Errorf(`Expected "Status: 401, Code: nope, Message: nope nope", instead got %s`, err)
-	}
-	if buckets != nil {
-		t.Errorf("Expected buckets to be empty, instead got %+v", buckets)
+		s.Close()
 	}
 }

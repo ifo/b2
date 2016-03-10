@@ -31,36 +31,18 @@ func Test_MakeB2_200(t *testing.T) {
 	}
 }
 
-func Test_MakeB2_400(t *testing.T) {
-	s := setupRequest(400,
-		`{"status":400,"code":"nope","message":"nope nope"}`)
-	defer s.Close()
+func Test_MakeB2_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
 
-	b, err := MakeB2("1", "1")
-	if err == nil {
-		t.Fatal("Expected error, no error received")
-	}
-	if err.Error() != "Status: 400, Code: nope, Message: nope nope" {
-		t.Errorf(`Expected "Status: 400, Code: nope, Message: nope nope", instead got %s`, err)
-	}
-	if b != nil {
-		t.Errorf("Expected b to be empty, instead got %+v", b)
-	}
-}
+		b, err := MakeB2("1", "1")
+		testErrorResponse(err, codes[i], t)
+		if b != nil {
+			t.Errorf("Expected b to be empty, instead got %+v", b)
+		}
 
-func Test_MakeB2_401(t *testing.T) {
-	s := setupRequest(401, `{"status":401,"code":"nope","message":"nope nope"}`)
-	defer s.Close()
-
-	b, err := MakeB2("1", "1")
-	if err == nil {
-		t.Fatal("Expected error, no error received")
-	}
-	if err.Error() != "Status: 401, Code: nope, Message: nope nope" {
-		t.Errorf(`Expected "Status: 401, Code: nope, Message: nope nope", instead got %s`, err)
-	}
-	if b != nil {
-		t.Errorf("Expected b to be empty, instead got %+v", b)
+		s.Close()
 	}
 }
 
@@ -82,4 +64,25 @@ func setupRequest(code int, body string) *httptest.Server {
 	protocol = "http"
 
 	return server
+}
+
+func errorResponses() ([]int, []string) {
+	codes := []int{400, 401}
+	bodies := []string{
+		`{"status":400,"code":"nope","message":"nope nope"}`,
+		`{"status":401,"code":"nope","message":"nope nope"}`,
+	}
+	return codes, bodies
+}
+
+func testErrorResponse(err error, code int, t *testing.T) {
+	if err == nil {
+		t.Fatal("Expected error, no error received")
+	}
+	if err.Error() !=
+		fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {
+		t.Errorf(
+			`Expected "Status: %d, Code: nope, Message: nope nope", instead got %s`,
+			code, err)
+	}
 }
