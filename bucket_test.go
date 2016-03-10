@@ -6,11 +6,8 @@ import (
 
 func Test_B2_ListBuckets_Success(t *testing.T) {
 	b := makeTestB2()
-	s := setupRequest(200, `{"buckets": [{
-    "bucketId": "id",
-    "accountId": "id",
-    "bucketName" : "name",
-    "bucketType": "allPrivate"}]}`)
+	s := setupRequest(200, `{"buckets":
+[{"bucketId": "id","accountId": "id","bucketName" : "name","bucketType": "allPrivate"}]}`)
 	defer s.Close()
 
 	buckets, err := b.ListBuckets()
@@ -53,7 +50,27 @@ func Test_B2_ListBuckets_Errors(t *testing.T) {
 }
 
 func Test_B2_CreateBucket_Success(t *testing.T) {
-	t.Skip()
+	b := makeTestB2()
+	s := setupRequest(200,
+		`{"bucketId": "id","accountId": "id","bucketName" : "bucket","bucketType": "allPrivate"}`)
+	defer s.Close()
+
+	bucket, err := b.CreateBucket("bucket", AllPrivate)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	if bucket.BucketID != "id" {
+		t.Errorf(`Expected "id", instead got %s`, bucket.BucketID)
+	}
+	if bucket.BucketName != "bucket" {
+		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
+	}
+	if bucket.BucketType != AllPrivate {
+		t.Errorf("Expected bucket type to be private, instead got %s", bucket.BucketType)
+	}
+	if bucket.B2 != b {
+		t.Errorf("Expected bucket B2 to be test B2, instead got %s", bucket.B2)
+	}
 }
 
 func Test_B2_CreateBucket_Errors(t *testing.T) {
@@ -74,7 +91,32 @@ func Test_B2_CreateBucket_Errors(t *testing.T) {
 }
 
 func Test_Bucket_Update_Success(t *testing.T) {
-	t.Skip()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+	s := setupRequest(200,
+		`{"bucketId": "id","accountId": "id","bucketName" : "bucket","bucketType": "allPublic"}`)
+	defer s.Close()
+
+	err := bucket.Update(AllPublic)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+
+	// bucket type should change
+	if bucket.BucketType != AllPublic {
+		t.Errorf("Expected bucket type to be private, instead got %s", bucket.BucketType)
+	}
+
+	// nothing else should have changed
+	if bucket.BucketID != "id" {
+		t.Errorf(`Expected "id", instead got %s`, bucket.BucketID)
+	}
+	if bucket.BucketName != "bucket" {
+		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
+	}
+	if bucket.B2 != b {
+		t.Errorf("Expected bucket B2 to be test B2, instead got %s", bucket.B2)
+	}
 }
 
 func Test_Bucket_Update_Errors(t *testing.T) {
@@ -96,7 +138,16 @@ func Test_Bucket_Update_Errors(t *testing.T) {
 }
 
 func Test_Bucket_Delete_Success(t *testing.T) {
-	t.Skip()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+	s := setupRequest(200,
+		`{"bucketId": "id","accountId": "id","bucketName" : "bucket","bucketType": "allPublic"}`)
+	defer s.Close()
+
+	err := bucket.Delete()
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
 }
 
 func Test_Bucket_Delete_Errors(t *testing.T) {
@@ -116,8 +167,8 @@ func Test_Bucket_Delete_Errors(t *testing.T) {
 
 func makeTestBucket(b *B2) *Bucket {
 	return &Bucket{
-		BucketID:   "1",
-		BucketName: "name",
+		BucketID:   "id",
+		BucketName: "bucket",
 		BucketType: AllPrivate,
 		B2:         b,
 	}
