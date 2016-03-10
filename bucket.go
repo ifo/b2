@@ -30,8 +30,7 @@ type bucketRequest struct {
 func (b *B2) ListBuckets() ([]Bucket, error) {
 	request := bucketRequest{AccountID: b.AccountID}
 	response := &listBucketsResponse{}
-	err := b.MakeApiRequest(
-		"POST", "/b2api/v1/b2_list_buckets", request, response)
+	err := b.MakeApiRequest("POST", "/b2api/v1/b2_list_buckets", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +49,7 @@ func (b *B2) CreateBucket(name string, bType BucketType) (*Bucket, error) {
 		BucketType: bType,
 	}
 	response := &Bucket{B2: b}
-	err := b.MakeApiRequest(
-		"POST", "/b2api/v1/b2_create_bucket", request, response)
+	err := b.MakeApiRequest("POST", "/b2api/v1/b2_create_bucket", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +70,5 @@ func (b *Bucket) Delete() error {
 		AccountID: b.B2.AccountID,
 		BucketID:  b.BucketID,
 	}
-	return b.B2.MakeApiRequest(
-		"POST", "/b2api/v1/b2_delete_bucket", request, &Bucket{})
+	return b.B2.MakeApiRequest("POST", "/b2api/v1/b2_delete_bucket", request, &Bucket{})
 }

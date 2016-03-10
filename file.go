@@ -20,13 +20,11 @@ type File struct {
 	Data io.ReadWriter
 }
 
-func (b *Bucket) ListFileNames(startFileName string,
-	maxFileCount int64) ([]FileMeta, error) {
+func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) ([]FileMeta, error) {
 	return nil, nil
 }
 
-func (b *Bucket) ListFileVersions(startFileName, startFileID string,
-	maxFileCount int64) ([]FileMeta, error) {
+func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCount int64) ([]FileMeta, error) {
 	return nil, nil
 }
 
@@ -38,8 +36,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	return nil, nil
 }
 
-func (b *Bucket) UploadFile(name string, fileInfo map[string]string,
-	file io.Reader) error {
+func (b *Bucket) UploadFile(name string, fileInfo map[string]string, file io.Reader) error {
 	return nil
 }
 

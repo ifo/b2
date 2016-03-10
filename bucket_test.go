@@ -7,7 +7,7 @@ import (
 func Test_B2_ListBuckets_Success(t *testing.T) {
 	b := makeTestB2()
 	s := setupRequest(200, `{"buckets":
-[{"bucketId": "id","accountId": "id","bucketName" : "name","bucketType": "allPrivate"}]}`)
+[{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
 	defer s.Close()
 
 	buckets, err := b.ListBuckets()
@@ -52,7 +52,7 @@ func Test_B2_ListBuckets_Errors(t *testing.T) {
 func Test_B2_CreateBucket_Success(t *testing.T) {
 	b := makeTestB2()
 	s := setupRequest(200,
-		`{"bucketId": "id","accountId": "id","bucketName" : "bucket","bucketType": "allPrivate"}`)
+		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPrivate"}`)
 	defer s.Close()
 
 	bucket, err := b.CreateBucket("bucket", AllPrivate)
@@ -94,7 +94,7 @@ func Test_Bucket_Update_Success(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
 	s := setupRequest(200,
-		`{"bucketId": "id","accountId": "id","bucketName" : "bucket","bucketType": "allPublic"}`)
+		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
 	defer s.Close()
 
 	err := bucket.Update(AllPublic)
@@ -141,7 +141,7 @@ func Test_Bucket_Delete_Success(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
 	s := setupRequest(200,
-		`{"bucketId": "id","accountId": "id","bucketName" : "bucket","bucketType": "allPublic"}`)
+		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
 	defer s.Close()
 
 	err := bucket.Delete()

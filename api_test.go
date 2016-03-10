@@ -81,16 +81,14 @@ func testErrorResponse(err error, code int, t *testing.T) {
 	}
 	if err.Error() !=
 		fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {
-		t.Errorf(
-			`Expected "Status: %d, Code: nope, Message: nope nope", instead got %s`,
-			code, err)
+		t.Errorf(`Expected "Status: %d, Code: nope, Message: nope nope", instead got %s`, code, err)
 	}
 }
 
 func makeTestB2() *B2 {
 	return &B2{
-		AccountID:          "1",
-		AuthorizationToken: "1",
+		AccountID:          "id",
+		AuthorizationToken: "token",
 		ApiUrl:             "https://api900.backblaze.com",
 		DownloadUrl:        "https://f900.backblaze.com",
 	}
