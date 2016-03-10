@@ -1,6 +1,7 @@
 package b2
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -22,53 +23,66 @@ type authResponse struct {
 }
 
 func MakeB2(accountId, appKey string) (*B2, error) {
-	req, err := http.NewRequest("GET",
-		replaceProtocol("https://api.backblaze.com/b2api/v1/b2_authorize_account"),
-		nil)
+	b := &B2{
+		AccountID:      accountId,
+		ApplicationKey: appKey,
+	}
+
+	authResp := &authResponse{}
+	err := b.MakeRequest("GET",
+		"https://api.backblaze.com/b2api/v1/b2_authorize_account", nil, authResp)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(accountId, appKey)
+	b.AuthorizationToken = authResp.AuthorizationToken
+	b.ApiUrl = authResp.ApiUrl
+	b.DownloadUrl = authResp.DownloadUrl
 
-	resp, err := clientDo(req)
+	return b, nil
+}
+
+func (b *B2) MakeApiRequest(method, urlPart string, request, response interface{}) error {
+	url := replaceProtocol(b.ApiUrl + urlPart)
+	return b.MakeRequest(method, url, request, response)
+}
+
+func (b *B2) MakeDownloadRequest(method, urlPart string, request, response interface{}) error {
+	url := replaceProtocol(b.DownloadUrl + urlPart)
+	return b.MakeRequest(method, url, request, response)
+}
+
+func (b *B2) MakeRequest(method, url string, request, response interface{}) error {
+	reqBody, err := json.Marshal(request)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	req, err := http.NewRequest(
+		method, replaceProtocol(url), bytes.NewReader(reqBody))
+	if err != nil {
+		return err
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if resp.StatusCode == 200 {
-		authJson := authResponse{}
-		if err := json.Unmarshal(body, &authJson); err != nil {
-			return nil, err
-		}
-
-		return &B2{
-			AccountID:          authJson.AccountID,
-			ApplicationKey:     appKey,
-			AuthorizationToken: authJson.AuthorizationToken,
-			ApiUrl:             authJson.ApiUrl,
-			DownloadUrl:        authJson.DownloadUrl,
-		}, nil
-	} else {
+	if resp.StatusCode != 200 {
 		errJson := errorResponse{}
 		if err := json.Unmarshal(body, &errJson); err != nil {
-			return nil, err
+			return err
 		}
 
-		return nil, errJson
+		return errJson
 	}
-}
 
-func (b *B2) MakeApiUrl(urlPart string) string {
-	return replaceProtocol(b.ApiUrl + urlPart)
-}
-
-func (b *B2) MakeDownloadUrl(urlPart string) string {
-	return replaceProtocol(b.DownloadUrl + urlPart)
+	return json.Unmarshal(body, response)
 }
