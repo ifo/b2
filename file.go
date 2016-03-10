@@ -28,11 +28,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 	return nil, nil
 }
 
-func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	return nil, nil
-}
-
-func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
+func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	return nil, nil
 }
 
@@ -40,7 +36,11 @@ func (b *Bucket) UploadFile(name string, fileInfo map[string]string, file io.Rea
 	return nil
 }
 
-func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
+func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
+	return nil, nil
+}
+
+func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	return nil, nil
 }
 
