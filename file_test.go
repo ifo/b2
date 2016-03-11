@@ -11,10 +11,10 @@ func Test_Bucket_ListFileNames_Success(t *testing.T) {
 	s := setupRequest(200, `{"files":[
 {"action":"upload","fileId":"id0","fileName":"name0","size":10,"uploadTimestamp":10},
 {"action":"upload","fileId":"id1","fileName":"name1","size":11,"uploadTimestamp":11}],
-"nextFileName":null}`)
+"nextFileName":"name2"}`)
 	defer s.Close()
 
-	response, err := bucket.ListFileNames("", 0)
+	response, err := bucket.ListFileNames("", 2)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -22,8 +22,8 @@ func Test_Bucket_ListFileNames_Success(t *testing.T) {
 	if len(response.Files) != 2 {
 		t.Fatalf("Expected two files, instead got %d", len(response.Files))
 	}
-	if response.NextFileName != "" {
-		t.Errorf("Expected no next file name, instead got %s", response.NextFileName)
+	if response.NextFileName != "name2" {
+		t.Errorf("Expected next file name to be name2, instead got %s", response.NextFileName)
 	}
 	if response.NextFileID != "" {
 		t.Errorf("Expected no next file id, instead got %s", response.NextFileID)
