@@ -1,6 +1,7 @@
 package b2
 
 import (
+	"fmt"
 	"io"
 )
 
@@ -63,7 +64,26 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 }
 
 func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCount int64) (*ListFileResponse, error) {
-	return nil, nil
+	if startFileID != "" && startFileName == "" {
+		return nil, fmt.Errorf("If startFileID is provided, startFileName must be provided")
+	}
+	request := listFileRequest{
+		BucketID:      b.BucketID,
+		StartFileName: startFileName,
+		StartFileID:   startFileID,
+		MaxFileCount:  maxFileCount,
+	}
+	response := &ListFileResponse{}
+	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_list_file_versions", request, response)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range response.Files {
+		response.Files[i].Bucket = b
+	}
+
+	return response, nil
 }
 
 func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
