@@ -1,6 +1,7 @@
 package b2
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -8,22 +9,28 @@ import (
 func Test_Bucket_ListFileNames_Success(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
-	s := setupRequest(200, `{"files":[
-{"action":"upload","fileId":"id0","fileName":"name0","size":10,"uploadTimestamp":10},
-{"action":"upload","fileId":"id1","fileName":"name1","size":11,"uploadTimestamp":11}],
-"nextFileName":"name2"}`)
+
+	fileAction := []Action{ActionUpload, ActionUpload, ActionUpload}
+	setupFiles := ""
+	for i := range fileAction {
+		setupFiles += makeTestFileJson(i, fileAction[i])
+		if i != len(fileAction)-1 {
+			setupFiles += ","
+		}
+	}
+	s := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileName":"name%d"}`, setupFiles, len(fileAction)))
 	defer s.Close()
 
-	response, err := bucket.ListFileNames("", 2)
+	response, err := bucket.ListFileNames("", 3)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	if len(response.Files) != 2 {
+	if len(response.Files) != 3 {
 		t.Fatalf("Expected two files, instead got %d", len(response.Files))
 	}
-	if response.NextFileName != "name2" {
-		t.Errorf("Expected next file name to be name2, instead got %s", response.NextFileName)
+	if response.NextFileName != fmt.Sprintf("name%d", len(fileAction)) {
+		t.Errorf("Expected next file name to be name%d, instead got %s", len(fileAction), response.NextFileName)
 	}
 	if response.NextFileID != "" {
 		t.Errorf("Expected no next file id, instead got %s", response.NextFileID)
@@ -41,7 +48,7 @@ func Test_Bucket_ListFileNames_Success(t *testing.T) {
 		if file.Size != int64(10+i) {
 			t.Errorf("Expected size to be %d, instead got %d", 10+i, file.Size)
 		}
-		if file.UploadTimestamp != int64(10+i) {
+		if file.UploadTimestamp != int64(100+i) {
 			t.Errorf("Expected upload timestamp to be %d, instead got %d", 10+i, file.UploadTimestamp)
 		}
 		if file.Bucket != bucket {
@@ -71,12 +78,17 @@ func Test_Bucket_ListFileNames_Errors(t *testing.T) {
 func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
+
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
-	s := setupRequest(200, `{"files":[
-{"action":"upload","fileId":"id0","fileName":"name0","size":10,"uploadTimestamp":10},
-{"action":"hide","fileId":"id1","fileName":"name1","size":11,"uploadTimestamp":11},
-{"action":"start","fileId":"id2","fileName":"name2","size":12,"uploadTimestamp":12}],
-"nextFileId":"id3","nextFileName":"name3"}`)
+	setupFiles := ""
+	for i := range fileAction {
+		setupFiles += makeTestFileJson(i, fileAction[i])
+		if i != len(fileAction)-1 {
+			setupFiles += ","
+		}
+	}
+	s := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
+		setupFiles, len(fileAction), len(fileAction)))
 	defer s.Close()
 
 	response, err := bucket.ListFileVersions("", "", 3)
@@ -106,7 +118,7 @@ func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 		if file.Size != int64(10+i) {
 			t.Errorf("Expected size to be %d, instead got %d", 10+i, file.Size)
 		}
-		if file.UploadTimestamp != int64(10+i) {
+		if file.UploadTimestamp != int64(100+i) {
 			t.Errorf("Expected upload timestamp to be %d, instead got %d", 10+i, file.UploadTimestamp)
 		}
 		if file.Bucket != bucket {
@@ -131,4 +143,20 @@ func Test_Bucket_ListFileVersions_Errors(t *testing.T) {
 
 		s.Close()
 	}
+}
+
+func makeTestFileJson(num int, action Action) string {
+	file := FileMeta{
+		ID:              fmt.Sprintf("id%d", num),
+		Name:            fmt.Sprintf("name%d", num),
+		Size:            int64(10 + num),
+		ContentLength:   int64(10 + num),
+		ContentSha1:     "sha1", // TODO make valid SHA1
+		ContentType:     "text",
+		Action:          action,
+		FileInfo:        map[string]string{},
+		UploadTimestamp: int64(100 + num),
+	}
+	fileJson, _ := json.Marshal(file)
+	return string(fileJson)
 }
