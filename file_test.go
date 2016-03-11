@@ -145,6 +145,77 @@ func Test_Bucket_ListFileVersions_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_GetFileInfo_Success(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
+
+	for i := range fileAction {
+		s := setupRequest(200, makeTestFileJson(i, fileAction[i]))
+
+		fileID := fmt.Sprintf("id%d", i)
+		file, err := bucket.GetFileInfo(fileID)
+		if err != nil {
+			t.Fatalf("Expected no error, instead got %s", err)
+		}
+
+		if file.Action != fileAction[i] {
+			t.Errorf("Expected action to be %v, instead got %v", fileAction[i], file.Action)
+		}
+		if file.ID != fmt.Sprintf("id%d", i) {
+			t.Errorf("Expected file ID to be id%d, instead got %s", i, fmt.Sprintf("id%d", i))
+		}
+		if file.Name != fmt.Sprintf("name%d", i) {
+			t.Errorf("Expected file name to be name%d, instead got %s", i, fmt.Sprintf("name%d", i))
+		}
+		if file.ContentLength != int64(10+i) {
+			t.Errorf("Expected content length to be %d, instead got %d", 10+i, file.Size)
+		}
+		if file.ContentSha1 != "sha1" {
+			t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, file.ContentSha1)
+		}
+		if file.ContentType != "text" {
+			t.Errorf("Expected content type to be text, instead got %s", file.ContentType)
+		}
+		if file.Bucket != bucket {
+			t.Errorf("Expected file bucket to be bucket, instead got %+v", file.Bucket)
+		}
+		for k, v := range file.FileInfo {
+			t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
+		}
+
+		s.Close()
+	}
+}
+
+func Test_Bucket_GetFileInfo_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
+
+		response, err := bucket.GetFileInfo(fmt.Sprintf("id%d", i))
+		testErrorResponse(err, codes[i], t)
+		if response != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", response)
+		}
+
+		s.Close()
+	}
+
+	// test no provided ID error
+	response, err := bucket.GetFileInfo("")
+	if err.Error() != "No fileID provided" {
+		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
+	}
+	if response != nil {
+		t.Errorf("Expected response to be empty, instead got %+v", response)
+	}
+}
+
 func makeTestFileJson(num int, action Action) string {
 	file := FileMeta{
 		ID:              fmt.Sprintf("id%d", num),

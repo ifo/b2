@@ -9,7 +9,7 @@ type FileMeta struct {
 	ID              string            `json:"fileId"`
 	Name            string            `json:"fileName"`
 	Size            int64             `json:"size"`
-	ContentLength   int64             `json:"-"` // remove, or does this != size?
+	ContentLength   int64             `json:"contentLength"`
 	ContentSha1     string            `json:"contentSha1"`
 	ContentType     string            `json:"contentType"`
 	Action          Action            `json:"action"`
@@ -87,7 +87,17 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 }
 
 func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
-	return nil, nil
+	if fileID == "" {
+		return nil, fmt.Errorf("No fileID provided")
+	}
+	request := fmt.Sprintf(`{"fileId":"%s"}`, fileID)
+	response := &FileMeta{}
+	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_get_file_info", request, response)
+	if err != nil {
+		return nil, err
+	}
+	response.Bucket = b
+	return response, nil
 }
 
 func (b *Bucket) UploadFile(name string, fileInfo map[string]string, file io.Reader) error {
