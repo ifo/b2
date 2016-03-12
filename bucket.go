@@ -1,12 +1,15 @@
 package b2
 
-import ()
+import (
+	"time"
+)
 
 type Bucket struct {
-	BucketID   string     `json:"bucketId"`
-	BucketName string     `json:"bucketName"`
-	BucketType BucketType `json:"bucketType"`
-	B2         *B2        `json:"-"`
+	BucketID   string       `json:"bucketId"`
+	BucketName string       `json:"bucketName"`
+	BucketType BucketType   `json:"bucketType"`
+	UploadUrls []*UploadUrl `json:"-"`
+	B2         *B2          `json:"-"`
 }
 
 type BucketType string
@@ -15,6 +18,12 @@ const (
 	AllPrivate BucketType = "allPrivate"
 	AllPublic  BucketType = "allPublic"
 )
+
+type UploadUrl struct {
+	Url   string    `json:"uploadUrl"`
+	Token string    `json:"authorizationToken"`
+	Time  time.Time `json:"-"`
+}
 
 type listBucketsResponse struct {
 	Buckets []Bucket `json:"buckets"`

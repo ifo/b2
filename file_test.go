@@ -216,6 +216,59 @@ func Test_Bucket_GetFileInfo_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	uploadUrl := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
+
+	s := setupRequest(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrl))
+	defer s.Close()
+
+	response, err := bucket.GetUploadUrl()
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+
+	if response.Time.IsZero() {
+		t.Error("Expected time to be now, instead got zero time")
+	}
+	if response.Token != "token" {
+		t.Errorf(`Expected response token to be "token", instead got %s`, response.Token)
+	}
+	if response.Url != uploadUrl {
+		t.Errorf("Expected response url to be uploadUrl, instead got %s", response.Url)
+	}
+
+	if len(bucket.UploadUrls) != 1 {
+		t.Fatalf("Expected length of bucket upload urls to be 1, insetad was %d", len(bucket.UploadUrls))
+	}
+	if bucket.UploadUrls[0] != response {
+		t.Error("Expected bucket's uploadUrls to be response, instead was", bucket.UploadUrls[0])
+	}
+}
+
+func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
+
+		response, err := bucket.GetUploadUrl()
+		testErrorResponse(err, codes[i], t)
+		if response != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", response)
+		}
+		if len(bucket.UploadUrls) != 0 {
+			t.Errorf("Expected no upload urls, instead got %d", bucket.UploadUrls)
+		}
+
+		s.Close()
+	}
+}
+
 func makeTestFileJson(num int, action Action) string {
 	file := FileMeta{
 		ID:              fmt.Sprintf("id%d", num),

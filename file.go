@@ -3,6 +3,7 @@ package b2
 import (
 	"fmt"
 	"io"
+	"time"
 )
 
 type FileMeta struct {
@@ -102,6 +103,17 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 
 func (b *Bucket) UploadFile(name string, fileInfo map[string]string, file io.Reader) error {
 	return nil
+}
+
+func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
+	request := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
+	response := &UploadUrl{Time: time.Now().UTC()}
+	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_get_upload_url", request, response)
+	if err != nil {
+		return nil, err
+	}
+	b.UploadUrls = append(b.UploadUrls, response)
+	return response, nil
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
