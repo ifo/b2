@@ -29,8 +29,12 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 	}
 
 	authResp := &authResponse{}
-	err := b.MakeRequest("GET",
-		"https://api.backblaze.com/b2api/v1/b2_authorize_account", nil, authResp)
+	req, err := b.CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(accountId, appKey)
+	err = b.DoRequest(req, authResp)
 	if err != nil {
 		return nil, err
 	}
@@ -53,17 +57,27 @@ func (b *B2) MakeDownloadRequest(method, urlPart string, request, response inter
 }
 
 func (b *B2) MakeRequest(method, url string, request, response interface{}) error {
+	req, err := b.CreateRequest(method, url, request)
+	if err != nil {
+		return err
+	}
+	return b.DoRequest(req, response)
+}
+
+func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Request, error) {
 	reqBody, err := json.Marshal(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	req, err := http.NewRequest(
-		method, replaceProtocol(url), bytes.NewReader(reqBody))
+	req, err := http.NewRequest(method, replaceProtocol(url), bytes.NewReader(reqBody))
 	if err != nil {
-		return err
+		return nil, err
 	}
+	return req, nil
+}
 
+func (b *B2) DoRequest(req *http.Request, response interface{}) error {
 	resp, err := httpClientDo(req)
 	if err != nil {
 		return err
