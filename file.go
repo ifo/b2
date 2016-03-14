@@ -52,7 +52,7 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 		MaxFileCount:  maxFileCount,
 	}
 	response := &ListFileResponse{}
-	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_list_file_names", request, response)
+	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_list_file_names", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 		MaxFileCount:  maxFileCount,
 	}
 	response := &ListFileResponse{}
-	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_list_file_versions", request, response)
+	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_list_file_versions", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	}
 	request := fmt.Sprintf(`{"fileId":"%s"}`, fileID)
 	response := &FileMeta{}
-	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_get_file_info", request, response)
+	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_get_file_info", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (b *Bucket) UploadFile(name string, fileInfo map[string]string, file io.Rea
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 	request := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
 	response := &UploadUrl{Time: time.Now().UTC()}
-	err := b.B2.MakeApiRequest("POST", "/b2api/v1/b2_get_upload_url", request, response)
+	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_get_upload_url", request, response)
 	if err != nil {
 		return nil, err
 	}

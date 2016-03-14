@@ -68,14 +68,14 @@ func Test_MakeB2_Errors(t *testing.T) {
 	}
 }
 
-func Test_B2_MakeApiRequest_HasAuth(t *testing.T) {
+func Test_B2_ApiRequest_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
 	s := setupMockServer(200, "", reqChan)
 	defer s.Close()
 
 	b := makeTestB2()
 
-	b.MakeApiRequest("GET", "", nil, nil)
+	b.ApiRequest("GET", "", nil, nil)
 
 	// get the request that the mock server received
 	req := <-reqChan

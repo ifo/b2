@@ -46,26 +46,13 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 	return b, nil
 }
 
-func (b *B2) MakeApiRequest(method, urlPart string, request, response interface{}) error {
+func (b *B2) ApiRequest(method, urlPart string, request, response interface{}) error {
 	url := replaceProtocol(b.ApiUrl + urlPart)
 	req, err := b.CreateRequest(method, url, request)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Authorization", b.AuthorizationToken)
-	return b.DoRequest(req, response)
-}
-
-func (b *B2) MakeDownloadRequest(method, urlPart string, request, response interface{}) error {
-	url := replaceProtocol(b.DownloadUrl + urlPart)
-	return b.MakeRequest(method, url, request, response)
-}
-
-func (b *B2) MakeRequest(method, url string, request, response interface{}) error {
-	req, err := b.CreateRequest(method, url, request)
-	if err != nil {
-		return err
-	}
 	return b.DoRequest(req, response)
 }
 
