@@ -20,9 +20,9 @@ const (
 )
 
 type UploadUrl struct {
-	Url   string    `json:"uploadUrl"`
-	Token string    `json:"authorizationToken"`
-	Time  time.Time `json:"-"`
+	Url                string    `json:"uploadUrl"`
+	AuthorizationToken string    `json:"authorizationToken"`
+	Time               time.Time `json:"-"`
 }
 
 type listBucketsResponse struct {

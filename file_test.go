@@ -233,8 +233,8 @@ func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
 	if response.Time.IsZero() {
 		t.Error("Expected time to be now, instead got zero time")
 	}
-	if response.Token != "token" {
-		t.Errorf(`Expected response token to be "token", instead got %s`, response.Token)
+	if response.AuthorizationToken != "token" {
+		t.Errorf(`Expected response token to be "token", instead got %s`, response.AuthorizationToken)
 	}
 	if response.Url != uploadUrl {
 		t.Errorf("Expected response url to be uploadUrl, instead got %s", response.Url)
