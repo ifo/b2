@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func Test_MakeB2_200(t *testing.T) {
+func Test_MakeB2_Success(t *testing.T) {
 	s := setupRequest(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 	defer s.Close()
 
