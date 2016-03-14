@@ -31,6 +31,28 @@ func Test_MakeB2_200(t *testing.T) {
 	}
 }
 
+func Test_MakeB2_HasAuth(t *testing.T) {
+	reqChan := make(chan *http.Request, 1)
+	s := setupMockServer(200, "", reqChan)
+	defer s.Close()
+
+	MakeB2("1", "1")
+
+	// get the request that the mock server received
+	req := <-reqChan
+
+	username, password, ok := req.BasicAuth()
+	if !ok {
+		t.Fatal("Expected ok to be true, instead got false")
+	}
+	if username != "1" {
+		t.Errorf(`Expected username to be "1", instead got %s`, username)
+	}
+	if password != "1" {
+		t.Errorf(`Expected password to be "1", instead got %s`, password)
+	}
+}
+
 func Test_MakeB2_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
 	for i := range codes {
@@ -46,8 +68,34 @@ func Test_MakeB2_Errors(t *testing.T) {
 	}
 }
 
+func Test_B2_MakeApiRequest_HasAuth(t *testing.T) {
+	reqChan := make(chan *http.Request, 1)
+	s := setupMockServer(200, "", reqChan)
+	defer s.Close()
+
+	b := makeTestB2()
+
+	b.MakeApiRequest("GET", "", nil, nil)
+
+	// get the request that the mock server received
+	req := <-reqChan
+
+	authToken := req.Header.Get("Authorization")
+	if authToken != b.AuthorizationToken {
+		t.Errorf("Expected auth token to be %s, instead got %s", b.AuthorizationToken, authToken)
+	}
+}
+
 func setupRequest(code int, body string) *httptest.Server {
+	return setupMockServer(code, body, nil)
+}
+
+func setupMockServer(code int, body string, reqChan chan<- *http.Request) *httptest.Server {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if reqChan != nil {
+			reqChan <- r
+		}
+
 		w.WriteHeader(code)
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, body)
