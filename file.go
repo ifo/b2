@@ -1,8 +1,10 @@
 package b2
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"time"
 )
 
@@ -101,8 +103,37 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	return response, nil
 }
 
-func (b *Bucket) UploadFile(name string, fileInfo map[string]string, file io.Reader) error {
-	return nil
+func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]string) (*FileMeta, error) {
+	// TODO check for usable upload url first
+	uploadUrl, err := b.GetUploadUrl()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := b.B2.CreateRequest("POST", uploadUrl.Url, file)
+	if err != nil {
+		return nil, err
+	}
+
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", uploadUrl.AuthorizationToken)
+	req.Header.Set("X-Bz-File-Name", "")
+	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
+	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
+	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(fileBytes)))
+	// TODO include other fileInfo
+	// TODO inclued X-Bz-Info-src_last_modified_millis
+
+	response := &FileMeta{Bucket: b}
+	err = b.B2.DoRequest(req, response)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }
 
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
