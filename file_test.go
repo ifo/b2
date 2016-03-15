@@ -156,33 +156,33 @@ func Test_Bucket_GetFileInfo_Success(t *testing.T) {
 		s := setupRequest(200, makeTestFileJson(i, fileAction[i]))
 
 		fileID := fmt.Sprintf("id%d", i)
-		file, err := bucket.GetFileInfo(fileID)
+		fileMeta, err := bucket.GetFileInfo(fileID)
 		if err != nil {
 			t.Fatalf("Expected no error, instead got %s", err)
 		}
 
-		if file.Action != fileAction[i] {
-			t.Errorf("Expected action to be %v, instead got %v", fileAction[i], file.Action)
+		if fileMeta.Action != fileAction[i] {
+			t.Errorf("Expected action to be %v, instead got %v", fileAction[i], fileMeta.Action)
 		}
-		if file.ID != fmt.Sprintf("id%d", i) {
-			t.Errorf("Expected file ID to be id%d, instead got %s", i, fmt.Sprintf("id%d", i))
+		if fileMeta.ID != fmt.Sprintf("id%d", i) {
+			t.Errorf("Expected file ID to be id%d, instead got %s", i, fileMeta.ID)
 		}
-		if file.Name != fmt.Sprintf("name%d", i) {
-			t.Errorf("Expected file name to be name%d, instead got %s", i, fmt.Sprintf("name%d", i))
+		if fileMeta.Name != fmt.Sprintf("name%d", i) {
+			t.Errorf("Expected file name to be name%d, instead got %s", i, fileMeta.Name)
 		}
-		if file.ContentLength != int64(10+i) {
-			t.Errorf("Expected content length to be %d, instead got %d", 10+i, file.Size)
+		if fileMeta.ContentLength != int64(10+i) {
+			t.Errorf("Expected content length to be %d, instead got %d", 10+i, fileMeta.ContentLength)
 		}
-		if file.ContentSha1 != "sha1" {
-			t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, file.ContentSha1)
+		if fileMeta.ContentSha1 != "sha1" {
+			t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, fileMeta.ContentSha1)
 		}
-		if file.ContentType != "text" {
-			t.Errorf("Expected content type to be text, instead got %s", file.ContentType)
+		if fileMeta.ContentType != "text" {
+			t.Errorf("Expected content type to be text, instead got %s", fileMeta.ContentType)
 		}
-		if file.Bucket != bucket {
-			t.Errorf("Expected file bucket to be bucket, instead got %+v", file.Bucket)
+		if fileMeta.Bucket != bucket {
+			t.Errorf("Expected file bucket to be bucket, instead got %+v", fileMeta.Bucket)
 		}
-		for k, v := range file.FileInfo {
+		for k, v := range fileMeta.FileInfo {
 			t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
 		}
 
