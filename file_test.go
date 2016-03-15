@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func Test_Bucket_ListFileNames_Success(t *testing.T) {
@@ -230,8 +231,8 @@ func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	if response.Time.IsZero() {
-		t.Error("Expected time to be now, instead got zero time")
+	if response.Expiration.IsZero() {
+		t.Error("Expected time to be now + 24h, instead got zero time")
 	}
 	if response.AuthorizationToken != "token" {
 		t.Errorf(`Expected response token to be "token", instead got %s`, response.AuthorizationToken)
@@ -267,6 +268,10 @@ func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 
 		s.Close()
 	}
+}
+
+func Test_Bucket_cleanUploadUrls(t *testing.T) {
+	t.Skip()
 }
 
 func makeTestFileJson(num int, action Action) string {

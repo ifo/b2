@@ -138,7 +138,7 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 	request := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
-	response := &UploadUrl{Time: time.Now().UTC()}
+	response := &UploadUrl{Expiration: time.Now().UTC().Add(24 * time.Hour)}
 	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_get_upload_url", request, response)
 	if err != nil {
 		return nil, err
@@ -161,4 +161,19 @@ func (b *Bucket) HideFile(fileName string) error {
 
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) error {
 	return nil
+}
+
+func (b *Bucket) cleanUploadUrls() {
+	if len(b.UploadUrls) == 0 {
+		return
+	}
+
+	now := time.Now().UTC()
+	remainingUrls := []*UploadUrl{}
+	for _, url := range b.UploadUrls {
+		if url.Expiration.After(now) {
+			remainingUrls = append(remainingUrls, url)
+		}
+	}
+	b.UploadUrls = remainingUrls
 }
