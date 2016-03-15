@@ -104,10 +104,18 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 }
 
 func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]string) (*FileMeta, error) {
-	// TODO check for usable upload url first
-	uploadUrl, err := b.GetUploadUrl()
-	if err != nil {
-		return nil, err
+	b.cleanUploadUrls()
+
+	uploadUrl := &UploadUrl{}
+	var err error
+	if len(b.UploadUrls) > 0 {
+		// TODO don't just pick the first usable url
+		uploadUrl = b.UploadUrls[0]
+	} else {
+		uploadUrl, err = b.GetUploadUrl()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	req, err := b.B2.CreateRequest("POST", uploadUrl.Url, file)

@@ -3,6 +3,7 @@ package b2
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -217,6 +218,64 @@ func Test_Bucket_GetFileInfo_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_UploadFile_Success(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+	bucket.UploadUrls = append(bucket.UploadUrls, makeTestUploadUrl())
+
+	s := setupRequest(200, makeTestFileJson(0, ActionUpload))
+	defer s.Close()
+
+	// TODO test fileInfo
+	fileMeta, err := bucket.UploadFile("name0", strings.NewReader("length ten"), nil)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+
+	if fileMeta.Action != ActionUpload {
+		t.Errorf("Expected action to be upload, instead got %v", fileMeta.Action)
+	}
+	if fileMeta.ID != "id0" {
+		t.Errorf("Expected file ID to be id0, instead got %s", fileMeta.ID)
+	}
+	if fileMeta.Name != "name0" {
+		t.Errorf("Expected file name to be name0, instead got %s", fileMeta.Name)
+	}
+	if fileMeta.ContentLength != 10 {
+		t.Errorf("Expected content length to be 10, instead got %d", fileMeta.ContentLength)
+	}
+	if fileMeta.ContentSha1 != "sha1" {
+		t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, fileMeta.ContentSha1)
+	}
+	if fileMeta.ContentType != "text" {
+		t.Errorf("Expected content type to be text/plain, instead got %s", fileMeta.ContentType)
+	}
+	if fileMeta.Bucket != bucket {
+		t.Errorf("Expected file bucket to be bucket, instead got %+v", fileMeta.Bucket)
+	}
+	for k, v := range fileMeta.FileInfo {
+		t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
+	}
+}
+
+func Test_Bucket_UploadFile_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
+
+		response, err := bucket.UploadFile("", strings.NewReader(""), nil)
+		testErrorResponse(err, codes[i], t)
+		if response != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", response)
+		}
+
+		s.Close()
+	}
+}
+
 func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
@@ -288,4 +347,12 @@ func makeTestFileJson(num int, action Action) string {
 	}
 	fileJson, _ := json.Marshal(file)
 	return string(fileJson)
+}
+
+func makeTestUploadUrl() *UploadUrl {
+	return &UploadUrl{
+		Url:                "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id",
+		AuthorizationToken: "token",
+		Expiration:         time.Now().UTC().Add(24 * time.Hour),
+	}
 }
