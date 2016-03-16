@@ -101,10 +101,11 @@ func setupMockServer(code int, body string, headers map[string]string, reqChan c
 			reqChan <- r
 		}
 
-		w.WriteHeader(code)
 		for k, v := range headers {
 			w.Header().Set(k, v)
 		}
+
+		w.WriteHeader(code)
 		fmt.Fprintln(w, body)
 	}))
 
