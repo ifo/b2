@@ -30,8 +30,8 @@ const (
 )
 
 type File struct {
-	FileMeta
-	Data io.ReadWriter
+	Meta FileMeta
+	Data []byte
 }
 
 type listFileRequest struct {
