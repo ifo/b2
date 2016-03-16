@@ -33,7 +33,7 @@ func Test_MakeB2_Success(t *testing.T) {
 
 func Test_MakeB2_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
-	s := setupMockServer(200, "", reqChan)
+	s := setupMockJsonServer(200, "", reqChan)
 	defer s.Close()
 
 	MakeB2("1", "1")
@@ -70,7 +70,7 @@ func Test_MakeB2_Errors(t *testing.T) {
 
 func Test_B2_ApiRequest_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
-	s := setupMockServer(200, "", reqChan)
+	s := setupMockJsonServer(200, "", reqChan)
 	defer s.Close()
 
 	b := makeTestB2()
@@ -87,17 +87,24 @@ func Test_B2_ApiRequest_HasAuth(t *testing.T) {
 }
 
 func setupRequest(code int, body string) *httptest.Server {
-	return setupMockServer(code, body, nil)
+	return setupMockJsonServer(code, body, nil)
 }
 
-func setupMockServer(code int, body string, reqChan chan<- *http.Request) *httptest.Server {
+func setupMockJsonServer(code int, body string, reqChan chan<- *http.Request) *httptest.Server {
+	headers := map[string]string{"Content-Type": "application/json"}
+	return setupMockServer(code, body, headers, reqChan)
+}
+
+func setupMockServer(code int, body string, headers map[string]string, reqChan chan<- *http.Request) *httptest.Server {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if reqChan != nil {
 			reqChan <- r
 		}
 
 		w.WriteHeader(code)
-		w.Header().Set("Content-Type", "application/json")
+		for k, v := range headers {
+			w.Header().Set(k, v)
+		}
 		fmt.Fprintln(w, body)
 	}))
 
