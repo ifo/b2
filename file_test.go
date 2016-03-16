@@ -1,6 +1,7 @@
 package b2
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -331,6 +332,79 @@ func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	t.Skip()
+}
+
+func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	headers := map[string]string{
+		"X-Bz-File-Id":      "1",
+		"X-Bz-File-Name":    "cats.txt",
+		"Content-Length":    "20",
+		"X-Bz-Content-Sha1": "74c3c58c1b6a2a4f63c187493388b421e732fc4b",
+		"Content-Type":      "text/plain",
+	}
+
+	fileData := "cats cats cats cats"
+	// a newline is added at the end of the bytes
+	fileDataBytes := append(bytes.NewBufferString(fileData).Bytes(), 10)
+
+	s := setupMockServer(200, fileData, headers, nil)
+	defer s.Close()
+
+	file, err := bucket.DownloadFileByName("cats.txt")
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+
+	if file.Meta.ID != "1" {
+		t.Errorf(`Expected file.Meta.ID to be "1", instead got %s`, file.Meta.ID)
+	}
+	if file.Meta.Name != "cats.txt" {
+		t.Errorf(`Expected file.Meta.Name to be "cats.txt", instead got %s`, file.Meta.Name)
+	}
+	if file.Meta.Size != int64(len(file.Data)) {
+		t.Errorf("Expected file.Meta.Size to be 20, instead got %d", file.Meta.Size)
+	}
+	if file.Meta.ContentLength != 20 {
+		t.Errorf("Expected file.Meta.ContentLength to be 20, instead got %d", file.Meta.ContentLength)
+	}
+	if file.Meta.ContentSha1 != headers["X-Bz-Content-Sha1"] {
+		t.Errorf(`Expected file.Meta.Sha1 to be "%s", instead got %s`, headers["X-Bz-Content-Sha1"], file.Meta.ContentSha1)
+	}
+	if file.Meta.ContentType != "text/plain" {
+		t.Errorf(`Expected file.Meta.ContentType to be "text/plain", instead got %s`, file.Meta.ContentType)
+	}
+	// TODO include and test fileinfo
+	for k, v := range file.Meta.FileInfo {
+		t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
+	}
+	if !bytes.Equal(file.Data, fileDataBytes) {
+		t.Errorf(`Expected file.Data to be "%v", instead got %v`, fileDataBytes, file.Data)
+	}
+
+	if file.Meta.Bucket != bucket {
+		t.Errorf("Expected file.Meta.bucket to be bucket, instead got %+v", file.Meta.Bucket)
+	}
+}
+
+func Test_Bucket_DownloadFileByName_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
+
+		file, err := bucket.DownloadFileByName("cat.txt")
+		testErrorResponse(err, codes[i], t)
+		if file != nil {
+			t.Errorf("Expected file to be nil, instead got %+v", file)
+		}
+
+		s.Close()
+	}
 }
 
 func makeTestFileJson(num int, action Action) string {
