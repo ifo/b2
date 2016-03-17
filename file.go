@@ -287,8 +287,15 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 	return response, nil
 }
 
-func (b *Bucket) DeleteFileVersion(fileName, fileID string) error {
-	return nil
+// TODO? return only the fileName and fileId, instead of mostly blank FileMeta
+func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
+	request := fmt.Sprintf(`{"fileName":"%s","fileId":"%s"}`, fileName, fileID)
+	response := &FileMeta{Bucket: b}
+	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_delete_file_version", request, response)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }
 
 func (b *Bucket) cleanUploadUrls() {

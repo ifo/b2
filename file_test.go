@@ -546,6 +546,48 @@ func Test_Bucket_HideFile_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_DeleteFileVersion_Success(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	s := setupRequest(200, `{"fileId":"1","fileName":"cats.txt"}`)
+	defer s.Close()
+
+	fileMeta, err := bucket.DeleteFileVersion("cats.txt", "1")
+	if err != nil {
+		t.Fatalf("Expected err to be nil, instead got %+v", err)
+	}
+
+	if fileMeta.ID != "1" {
+		t.Errorf(`Expected fileMeta.ID to be "1", instead got %s`, fileMeta.ID)
+	}
+	if fileMeta.Name != "cats.txt" {
+		t.Errorf(`Expected fileMeta.Name to be "cats.txt", instead got %s`, fileMeta.Name)
+	}
+
+	if fileMeta.Bucket != bucket {
+		t.Errorf("Expected fileMeta.Bucket to be bucket, instead got %+v", fileMeta.Bucket)
+	}
+}
+
+func Test_Bucket_DeleteFileVersion_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
+
+		fileMeta, err := bucket.DeleteFileVersion("cats.txt", "1")
+		testErrorResponse(err, codes[i], t)
+		if fileMeta != nil {
+			t.Errorf("Expected fileMeta to be nil, instead got %+v", fileMeta)
+		}
+
+		s.Close()
+	}
+}
+
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
