@@ -277,8 +277,14 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	}, nil
 }
 
-func (b *Bucket) HideFile(fileName string) error {
-	return nil
+func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
+	request := fmt.Sprintf(`{"fileName":"%s","bucketId","%s"}`, fileName, b.BucketID)
+	response := &FileMeta{Bucket: b}
+	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_hide_file", request, response)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }
 
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) error {

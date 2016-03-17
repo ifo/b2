@@ -476,6 +476,76 @@ func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_HideFile_Success(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	unixTime := time.Now().Unix()
+	s := setupRequest(200, fmt.Sprintf(`{
+"fileId":"1",
+"fileName":"cats.txt",
+"contentType":null,
+"contentSha1":null,
+"fileInfo":{},
+"action":"hide",
+"size":0,
+"uploadTimestamp":%d
+}`, unixTime))
+	defer s.Close()
+
+	fileMeta, err := bucket.HideFile("cats.txt")
+	if err != nil {
+		t.Fatalf("Expected err to be nil, instead got %+v", err)
+	}
+
+	if fileMeta.ID != "1" {
+		t.Errorf(`Expected fileMeta.ID to be "1", instead got %s`, fileMeta.ID)
+	}
+	if fileMeta.Name != "cats.txt" {
+		t.Errorf(`Expected fileMeta.Name to be "cats.txt", instead got %s`, fileMeta.Name)
+	}
+	if fileMeta.ContentType != "" {
+		t.Errorf(`Expected fileMeta.ContentType to be "", instead got %s`, fileMeta.ContentType)
+	}
+	if fileMeta.ContentSha1 != "" {
+		t.Errorf(`Expected fileMeta.ContentSha1 to be "", instead got %s`, fileMeta.ContentSha1)
+	}
+	if fileMeta.Action != "hide" {
+		t.Errorf(`Expected fileMeta.Action to be "hide", instead got %s`, fileMeta.Action)
+	}
+	if fileMeta.Size != 0 {
+		t.Errorf(`Expected fileMeta.Size to be 0, instead got %d`, fileMeta.Size)
+	}
+	if fileMeta.UploadTimestamp != unixTime {
+		t.Errorf(`Expected fileMeta.UploadTimestamp to be unixTime, instead got %v`, fileMeta.UploadTimestamp)
+	}
+	for k, v := range fileMeta.FileInfo {
+		t.Errorf("Expected fileMeta.FileInfo to be empty, instead got %s: %s", k, v)
+	}
+
+	if fileMeta.Bucket != bucket {
+		t.Errorf("Expected fileMeta.Bucket to be bucket, instead got %+v", fileMeta.Bucket)
+	}
+}
+
+func Test_Bucket_HideFile_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	for i := range codes {
+		s := setupRequest(codes[i], bodies[i])
+
+		fileMeta, err := bucket.HideFile("cats.txt")
+		testErrorResponse(err, codes[i], t)
+		if fileMeta != nil {
+			t.Errorf("Expected fileMeta to be nil, instead got %+v", fileMeta)
+		}
+
+		s.Close()
+	}
+}
+
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
