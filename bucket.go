@@ -19,7 +19,7 @@ const (
 	AllPublic  BucketType = "allPublic"
 )
 
-// TODO include some marker of being used (and mutex?)
+// TODO? include some marker of being used (maybe mutex)
 type UploadUrl struct {
 	Url                string    `json:"uploadUrl"`
 	AuthorizationToken string    `json:"authorizationToken"`

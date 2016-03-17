@@ -196,7 +196,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	}
 
 	if fmt.Sprintf("%x", sha1.Sum(fileBytes)) != resp.Header.Get("X-Bz-Content-Sha1") {
-		// TODO retry download?
+		// TODO? retry download
 		return nil, fmt.Errorf("File sha1 didn't match provided sha1")
 	}
 
@@ -256,7 +256,7 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	}
 
 	if fmt.Sprintf("%x", sha1.Sum(fileBytes)) != resp.Header.Get("X-Bz-Content-Sha1") {
-		// TODO retry download?
+		// TODO? retry download
 		return nil, fmt.Errorf("File sha1 didn't match provided sha1")
 	}
 
