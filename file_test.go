@@ -330,10 +330,6 @@ func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 	}
 }
 
-func Test_Bucket_cleanUploadUrls(t *testing.T) {
-	t.Skip()
-}
-
 func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
 	b := makeTestB2()
 	bucket := makeTestBucket(b)
@@ -477,6 +473,35 @@ func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
 		}
 
 		s.Close()
+	}
+}
+
+func Test_Bucket_cleanUploadUrls(t *testing.T) {
+	b := makeTestB2()
+	bucket := makeTestBucket(b)
+
+	times := []time.Time{
+		time.Now().UTC(),
+		time.Now().UTC().Add(1 * time.Hour),
+		time.Now().UTC().Add(-1 * time.Hour),
+		time.Now().UTC().Add(2 * time.Hour),
+	}
+	// two UploadUrls should be cleaned
+	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[0]})
+	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[1]})
+	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[2]})
+	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[3]})
+
+	bucket.cleanUploadUrls()
+
+	if len(bucket.UploadUrls) != 2 {
+		t.Fatalf("Expected UploadUrls length to be 2, instead got %d", len(bucket.UploadUrls))
+	}
+	if bucket.UploadUrls[0].Expiration != times[1] {
+		t.Errorf("Expected url[0].Expiration to be times[1], instead got %v", bucket.UploadUrls[0].Expiration)
+	}
+	if bucket.UploadUrls[1].Expiration != times[3] {
+		t.Errorf("Expected url[1].Expiration to be times[3], instead got %v", bucket.UploadUrls[1].Expiration)
 	}
 }
 
