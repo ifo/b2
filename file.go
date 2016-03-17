@@ -218,7 +218,63 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	return nil, nil
+	req, err := b.B2.CreateRequest("GET", fmt.Sprintf("%s/b2api/v1/b2_download_file_by_id?fileId=%s", b.B2.DownloadUrl, fileID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if b.BucketType == AllPrivate {
+		req.Header.Set("Authorization", b.B2.AuthorizationToken)
+	}
+
+	// ignoring the "Range" header
+	// that will be in the file part section (when added)
+
+	resp, err := httpClientDo(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	fileBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		errJson := errorResponse{}
+		if err := json.Unmarshal(fileBytes, &errJson); err != nil {
+			return nil, err
+		}
+
+		return nil, errJson
+	}
+
+	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	if err != nil {
+		return nil, err
+	}
+
+	if fmt.Sprintf("%x", sha1.Sum(fileBytes)) != resp.Header.Get("X-Bz-Content-Sha1") {
+		// TODO retry download?
+		return nil, fmt.Errorf("File sha1 didn't match provided sha1")
+	}
+
+	// TODO collect "X-Bz-Info-*" headers
+
+	return &File{
+		Meta: FileMeta{
+			ID:            resp.Header.Get("X-Bz-File-Id"),
+			Name:          resp.Header.Get("X-Bz-File-Name"),
+			Size:          int64(len(fileBytes)),
+			ContentLength: int64(contentLength),
+			ContentSha1:   resp.Header.Get("X-Bz-Content-Sha1"),
+			ContentType:   resp.Header.Get("Content-Type"),
+			FileInfo:      nil,
+			Bucket:        b,
+		},
+		Data: fileBytes,
+	}, nil
 }
 
 func (b *Bucket) HideFile(fileName string) error {
