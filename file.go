@@ -135,7 +135,9 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
 	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
 	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(fileBytes)))
-	// TODO include other fileInfo
+	for k, v := range fileInfo {
+		req.Header.Set(fmt.Sprintf("X-Bz-Info-%s", k), v)
+	}
 	// TODO inclued X-Bz-Info-src_last_modified_millis
 
 	response := &FileMeta{Bucket: b}
