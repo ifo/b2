@@ -136,9 +136,9 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
 	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(fileBytes)))
 	for k, v := range fileInfo {
-		req.Header.Set(fmt.Sprintf("X-Bz-Info-%s", k), v)
+		req.Header.Set("X-Bz-Info-"+k, v)
 	}
-	// TODO inclued X-Bz-Info-src_last_modified_millis
+	// TODO include X-Bz-Info-src_last_modified_millis
 
 	response := &FileMeta{Bucket: b}
 	err = b.B2.DoRequest(req, response)
@@ -160,7 +160,7 @@ func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
-	req, err := b.B2.CreateRequest("GET", fmt.Sprintf("%s/file/%s", b.B2.DownloadUrl, fileName), nil)
+	req, err := b.B2.CreateRequest("GET", b.B2.DownloadUrl+"/file/"+fileName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	req, err := b.B2.CreateRequest("GET", fmt.Sprintf("%s/b2api/v1/b2_download_file_by_id?fileId=%s", b.B2.DownloadUrl, fileID), nil)
+	req, err := b.B2.CreateRequest("GET", b.B2.DownloadUrl+"/b2api/v1/b2_download_file_by_id?fileId="+fileID, nil)
 	if err != nil {
 		return nil, err
 	}
