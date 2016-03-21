@@ -53,3 +53,14 @@ func ParseResponseBody(resp *http.Response, response interface{}) error {
 
 	return json.Unmarshal(body, response)
 }
+
+func GetBzHeaders(resp *http.Response) map[string]string {
+	out := map[string]string{}
+	for k, v := range resp.Header {
+		if strings.HasPrefix(k, "X-Bz-Info-") {
+			// strip Bz prefix and grab first header
+			out[k[10:]] = v[0]
+		}
+	}
+	return out
+}

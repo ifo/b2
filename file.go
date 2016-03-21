@@ -141,10 +141,18 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	// TODO include X-Bz-Info-src_last_modified_millis
 
 	response := &FileMeta{Bucket: b}
-	err = b.B2.DoRequest(req, response)
+	resp, err := httpClientDo(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
+	err = ParseResponseBody(resp, response)
+	if err != nil {
+		return nil, err
+	}
+	response.FileInfo = GetBzHeaders(resp)
+
 	return response, nil
 }
 
