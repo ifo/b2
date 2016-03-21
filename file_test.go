@@ -16,7 +16,7 @@ func Test_Bucket_ListFileNames_Success(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionUpload, ActionUpload}
 	setupFiles := ""
 	for i := range fileAction {
-		setupFiles += makeTestFileJson(i, fileAction[i])
+		setupFiles += makeTestFileJson(i, fileAction[i], nil)
 		if i != len(fileAction)-1 {
 			setupFiles += ","
 		}
@@ -85,7 +85,7 @@ func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""
 	for i := range fileAction {
-		setupFiles += makeTestFileJson(i, fileAction[i])
+		setupFiles += makeTestFileJson(i, fileAction[i], nil)
 		if i != len(fileAction)-1 {
 			setupFiles += ","
 		}
@@ -155,7 +155,7 @@ func Test_Bucket_GetFileInfo_Success(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
-		s := setupRequest(200, makeTestFileJson(i, fileAction[i]))
+		s := setupRequest(200, makeTestFileJson(i, fileAction[i], nil))
 
 		fileID := fmt.Sprintf("id%d", i)
 		fileMeta, err := bucket.GetFileInfo(fileID)
@@ -224,11 +224,16 @@ func Test_Bucket_UploadFile_Success(t *testing.T) {
 	bucket := makeTestBucket(b)
 	bucket.UploadUrls = append(bucket.UploadUrls, makeTestUploadUrl())
 
-	s := setupRequest(200, makeTestFileJson(0, ActionUpload))
+	fileInfo := map[string]string{"is_cats": "no :(", "should_be_cats": "of course"}
+	respHeaders := map[string]string{}
+	for k, v := range fileInfo {
+		respHeaders["X-Bz-Info-"+k] = v
+	}
+
+	s := setupMockServer(200, makeTestFileJson(0, ActionUpload, fileInfo), respHeaders, nil)
 	defer s.Close()
 
-	// TODO test fileInfo
-	fileMeta, err := bucket.UploadFile("name0", strings.NewReader("length ten"), nil)
+	fileMeta, err := bucket.UploadFile("name0", strings.NewReader("length ten"), fileInfo)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -255,7 +260,9 @@ func Test_Bucket_UploadFile_Success(t *testing.T) {
 		t.Errorf("Expected file bucket to be bucket, instead got %+v", fileMeta.Bucket)
 	}
 	for k, v := range fileMeta.FileInfo {
-		t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
+		if val, ok := fileInfo[k]; !ok || val != v {
+			t.Errorf(`Expected fileMeta.FileInfo["%s"] to be "%s", instead got "%s"`, k, val, v)
+		}
 	}
 }
 
@@ -617,7 +624,7 @@ func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	}
 }
 
-func makeTestFileJson(num int, action Action) string {
+func makeTestFileJson(num int, action Action, fileInfo map[string]string) string {
 	file := FileMeta{
 		ID:              fmt.Sprintf("id%d", num),
 		Name:            fmt.Sprintf("name%d", num),
@@ -626,7 +633,7 @@ func makeTestFileJson(num int, action Action) string {
 		ContentSha1:     "sha1", // TODO make valid SHA1
 		ContentType:     "text",
 		Action:          action,
-		FileInfo:        map[string]string{},
+		FileInfo:        fileInfo,
 		UploadTimestamp: int64(100 + num),
 	}
 	fileJson, _ := json.Marshal(file)
