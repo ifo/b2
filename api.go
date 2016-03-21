@@ -3,7 +3,6 @@ package b2
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -76,19 +75,5 @@ func (b *B2) DoRequest(req *http.Request, response interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != 200 {
-		errJson := errorResponse{}
-		if err := json.Unmarshal(body, &errJson); err != nil {
-			return err
-		}
-
-		return errJson
-	}
-
-	return json.Unmarshal(body, response)
+	return ParseResponseBody(resp, response)
 }

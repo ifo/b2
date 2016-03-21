@@ -1,7 +1,9 @@
 package b2
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -32,4 +34,22 @@ type errorResponse struct {
 
 func (e errorResponse) Error() string {
 	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
+}
+
+// Response Helpers
+func ParseResponseBody(resp *http.Response, response interface{}) error {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		errJson := errorResponse{}
+		if err := json.Unmarshal(body, &errJson); err != nil {
+			return err
+		}
+		return errJson
+	}
+
+	return json.Unmarshal(body, response)
 }
