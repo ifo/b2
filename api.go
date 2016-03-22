@@ -3,7 +3,10 @@ package b2
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type B2 struct {
@@ -12,6 +15,12 @@ type B2 struct {
 	AuthorizationToken string
 	ApiUrl             string
 	DownloadUrl        string
+	client             *client
+}
+
+type client struct {
+	Protocol string
+	http.Client
 }
 
 type authResponse struct {
@@ -21,10 +30,27 @@ type authResponse struct {
 	DownloadUrl        string `json:"downloadUrl"`
 }
 
+// TODO make error public, add checking for error type
+type errorResponse struct {
+	Status  int64  `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+func (e errorResponse) Error() string {
+	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
+}
+
 func MakeB2(accountId, appKey string) (*B2, error) {
+	c := &client{Protocol: "https", Client: http.Client{}}
+	return makeB2(accountId, appKey, c)
+}
+
+func makeB2(accountId, appKey string, client *client) (*B2, error) {
 	b := &B2{
 		AccountID:      accountId,
 		ApplicationKey: appKey,
+		client:         client,
 	}
 
 	authResp := &authResponse{}
@@ -46,8 +72,7 @@ func MakeB2(accountId, appKey string) (*B2, error) {
 }
 
 func (b *B2) ApiRequest(method, urlPart string, request, response interface{}) error {
-	url := replaceProtocol(b.ApiUrl + urlPart)
-	req, err := b.CreateRequest(method, url, request)
+	req, err := b.CreateRequest(method, b.ApiUrl+urlPart, request)
 	if err != nil {
 		return err
 	}
@@ -60,8 +85,11 @@ func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
-
-	req, err := http.NewRequest(method, replaceProtocol(url), bytes.NewReader(reqBody))
+	url, err = b.replaceProtocol(url)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest(method, url, bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +97,55 @@ func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Reque
 }
 
 func (b *B2) DoRequest(req *http.Request, response interface{}) error {
-	resp, err := httpClientDo(req)
+	resp, err := b.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	return ParseResponseBody(resp, response)
+	if resp.StatusCode == 200 {
+		return ParseResponseBody(resp, response)
+	} else {
+		return ParseErrorResponse(resp)
+	}
+}
+
+func (b *B2) replaceProtocol(url string) (string, error) {
+	protoTrim := strings.Index(url, ":")
+	if protoTrim == -1 {
+		return url, fmt.Errorf("Invalid url")
+	}
+	return b.client.Protocol + url[protoTrim:], nil
+}
+
+func GetBzHeaders(resp *http.Response) map[string]string {
+	out := map[string]string{}
+	for k, v := range resp.Header {
+		if strings.HasPrefix(k, "X-Bz-Info-") {
+			// strip Bz prefix and grab first header
+			out[k[10:]] = v[0]
+		}
+	}
+	return out
+}
+
+func ParseResponseBody(resp *http.Response, respBody interface{}) error {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, respBody)
+}
+
+func ParseErrorResponse(resp *http.Response) error {
+	errResp := &errorResponse{}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, errResp)
+	if err != nil {
+		return err
+	}
+	return errResp
 }

@@ -8,11 +8,13 @@ import (
 	"testing"
 )
 
-func Test_MakeB2_Success(t *testing.T) {
-	s := setupRequest(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
+func Test_makeB2_Success(t *testing.T) {
+	s, c := setupRequest(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 	defer s.Close()
 
-	b, err := MakeB2("1", "1")
+	client := &client{Protocol: "http", Client: c}
+
+	b, err := makeB2("1", "1", client)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -31,12 +33,14 @@ func Test_MakeB2_Success(t *testing.T) {
 	}
 }
 
-func Test_MakeB2_HasAuth(t *testing.T) {
+func Test_makeB2_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
-	s := setupMockJsonServer(200, "", reqChan)
+	s, c := setupMockJsonServer(200, "", reqChan)
 	defer s.Close()
 
-	MakeB2("1", "1")
+	client := &client{Protocol: "http", Client: c}
+
+	makeB2("1", "1", client)
 
 	// get the request that the mock server received
 	req := <-reqChan
@@ -56,9 +60,10 @@ func Test_MakeB2_HasAuth(t *testing.T) {
 func Test_MakeB2_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
-		b, err := MakeB2("1", "1")
+		client := &client{Protocol: "http", Client: c}
+		b, err := makeB2("1", "1", client)
 		testErrorResponse(err, codes[i], t)
 		if b != nil {
 			t.Errorf("Expected b to be empty, instead got %+v", b)
@@ -70,10 +75,10 @@ func Test_MakeB2_Errors(t *testing.T) {
 
 func Test_B2_ApiRequest_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
-	s := setupMockJsonServer(200, "", reqChan)
+	s, c := setupMockJsonServer(200, "", reqChan)
 	defer s.Close()
 
-	b := makeTestB2()
+	b := makeTestB2(c)
 
 	b.ApiRequest("GET", "", nil, nil)
 
@@ -86,16 +91,16 @@ func Test_B2_ApiRequest_HasAuth(t *testing.T) {
 	}
 }
 
-func setupRequest(code int, body string) *httptest.Server {
+func setupRequest(code int, body string) (*httptest.Server, http.Client) {
 	return setupMockJsonServer(code, body, nil)
 }
 
-func setupMockJsonServer(code int, body string, reqChan chan<- *http.Request) *httptest.Server {
+func setupMockJsonServer(code int, body string, reqChan chan<- *http.Request) (*httptest.Server, http.Client) {
 	headers := map[string]string{"Content-Type": "application/json"}
 	return setupMockServer(code, body, headers, reqChan)
 }
 
-func setupMockServer(code int, body string, headers map[string]string, reqChan chan<- *http.Request) *httptest.Server {
+func setupMockServer(code int, body string, headers map[string]string, reqChan chan<- *http.Request) (*httptest.Server, http.Client) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if reqChan != nil {
 			reqChan <- r
@@ -115,11 +120,8 @@ func setupMockServer(code int, body string, headers map[string]string, reqChan c
 		},
 	}
 
-	// set private globals
-	httpClient = http.Client{Transport: tr}
-	protocol = "http"
+	return server, http.Client{Transport: tr}
 
-	return server
 }
 
 func errorResponses() ([]int, []string) {
@@ -133,19 +135,18 @@ func errorResponses() ([]int, []string) {
 
 func testErrorResponse(err error, code int, t *testing.T) {
 	if err == nil {
-		t.Fatal("Expected error, no error received")
-	}
-	if err.Error() !=
-		fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {
+		t.Error("Expected error, no error received")
+	} else if err.Error() != fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {
 		t.Errorf(`Expected "Status: %d, Code: nope, Message: nope nope", instead got %s`, code, err)
 	}
 }
 
-func makeTestB2() *B2 {
+func makeTestB2(c http.Client) *B2 {
 	return &B2{
 		AccountID:          "id",
 		AuthorizationToken: "token",
 		ApiUrl:             "https://api900.backblaze.com",
 		DownloadUrl:        "https://f900.backblaze.com",
+		client:             &client{Protocol: "http", Client: c},
 	}
 }

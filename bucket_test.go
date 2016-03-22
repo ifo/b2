@@ -5,11 +5,11 @@ import (
 )
 
 func Test_B2_ListBuckets_Success(t *testing.T) {
-	b := makeTestB2()
-	s := setupRequest(200, `{"buckets":
+	s, c := setupRequest(200, `{"buckets":
 [{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
 	defer s.Close()
 
+	b := makeTestB2(c)
 	buckets, err := b.ListBuckets()
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -34,11 +34,11 @@ func Test_B2_ListBuckets_Success(t *testing.T) {
 
 func Test_B2_ListBuckets_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
 		buckets, err := b.ListBuckets()
 		testErrorResponse(err, codes[i], t)
 		if buckets != nil {
@@ -50,11 +50,11 @@ func Test_B2_ListBuckets_Errors(t *testing.T) {
 }
 
 func Test_B2_CreateBucket_Success(t *testing.T) {
-	b := makeTestB2()
-	s := setupRequest(200,
+	s, c := setupRequest(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPrivate"}`)
 	defer s.Close()
 
+	b := makeTestB2(c)
 	bucket, err := b.CreateBucket("bucket", AllPrivate)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -75,11 +75,11 @@ func Test_B2_CreateBucket_Success(t *testing.T) {
 
 func Test_B2_CreateBucket_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
 		bucket, err := b.CreateBucket("bucket", AllPrivate)
 		testErrorResponse(err, codes[i], t)
 		if bucket != nil {
@@ -91,12 +91,12 @@ func Test_B2_CreateBucket_Errors(t *testing.T) {
 }
 
 func Test_Bucket_Update_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-	s := setupRequest(200,
+	s, c := setupRequest(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	err := bucket.Update(AllPublic)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -121,12 +121,12 @@ func Test_Bucket_Update_Success(t *testing.T) {
 
 func Test_Bucket_Update_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		err := bucket.Update(AllPublic)
 		testErrorResponse(err, codes[i], t)
 		if bucket.BucketType != AllPrivate {
@@ -138,12 +138,12 @@ func Test_Bucket_Update_Errors(t *testing.T) {
 }
 
 func Test_Bucket_Delete_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-	s := setupRequest(200,
+	s, c := setupRequest(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	err := bucket.Delete()
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -152,12 +152,11 @@ func Test_Bucket_Delete_Success(t *testing.T) {
 
 func Test_Bucket_Delete_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		err := bucket.Update(AllPublic)
 		testErrorResponse(err, codes[i], t)
 

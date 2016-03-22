@@ -141,7 +141,7 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	// TODO include X-Bz-Info-src_last_modified_millis
 
 	response := &FileMeta{Bucket: b}
-	resp, err := httpClientDo(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	// ignoring the "Range" header
 	// that will be in the file part section (when added)
 
-	resp, err := httpClientDo(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	// ignoring the "Range" header
 	// that will be in the file part section (when added)
 
-	resp, err := httpClientDo(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

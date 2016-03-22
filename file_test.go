@@ -4,15 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
 )
 
 func Test_Bucket_ListFileNames_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	fileAction := []Action{ActionUpload, ActionUpload, ActionUpload}
 	setupFiles := ""
 	for i := range fileAction {
@@ -21,9 +19,11 @@ func Test_Bucket_ListFileNames_Success(t *testing.T) {
 			setupFiles += ","
 		}
 	}
-	s := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileName":"name%d"}`, setupFiles, len(fileAction)))
+	s, c := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileName":"name%d"}`, setupFiles, len(fileAction)))
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	response, err := bucket.ListFileNames("", 3)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -62,12 +62,11 @@ func Test_Bucket_ListFileNames_Success(t *testing.T) {
 
 func Test_Bucket_ListFileNames_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		response, err := bucket.ListFileNames("", 0)
 		testErrorResponse(err, codes[i], t)
 		if response != nil {
@@ -79,9 +78,6 @@ func Test_Bucket_ListFileNames_Errors(t *testing.T) {
 }
 
 func Test_Bucket_ListFileVersions_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""
 	for i := range fileAction {
@@ -90,10 +86,12 @@ func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 			setupFiles += ","
 		}
 	}
-	s := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
+	s, c := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
 		setupFiles, len(fileAction), len(fileAction)))
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	response, err := bucket.ListFileVersions("", "", 3)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -132,12 +130,12 @@ func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 
 func Test_Bucket_ListFileVersions_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		response, err := bucket.ListFileVersions("", "", 0)
 		testErrorResponse(err, codes[i], t)
 		if response != nil {
@@ -149,13 +147,13 @@ func Test_Bucket_ListFileVersions_Errors(t *testing.T) {
 }
 
 func Test_Bucket_GetFileInfo_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
-		s := setupRequest(200, makeTestFileJson(i, fileAction[i], nil))
+		s, c := setupRequest(200, makeTestFileJson(i, fileAction[i], nil))
+
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 
 		fileID := fmt.Sprintf("id%d", i)
 		fileMeta, err := bucket.GetFileInfo(fileID)
@@ -194,12 +192,14 @@ func Test_Bucket_GetFileInfo_Success(t *testing.T) {
 
 func Test_Bucket_GetFileInfo_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
+
+	var bucket *Bucket
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket = makeTestBucket(b)
 		response, err := bucket.GetFileInfo(fmt.Sprintf("id%d", i))
 		testErrorResponse(err, codes[i], t)
 		if response != nil {
@@ -220,19 +220,18 @@ func Test_Bucket_GetFileInfo_Errors(t *testing.T) {
 }
 
 func Test_Bucket_UploadFile_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-	bucket.UploadUrls = append(bucket.UploadUrls, makeTestUploadUrl())
-
 	fileInfo := map[string]string{"is_cats": "no :(", "should_be_cats": "of course"}
 	respHeaders := map[string]string{}
 	for k, v := range fileInfo {
 		respHeaders["X-Bz-Info-"+k] = v
 	}
 
-	s := setupMockServer(200, makeTestFileJson(0, ActionUpload, fileInfo), respHeaders, nil)
+	s, c := setupMockServer(200, makeTestFileJson(0, ActionUpload, fileInfo), respHeaders, nil)
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
+	bucket.UploadUrls = append(bucket.UploadUrls, makeTestUploadUrl())
 	fileMeta, err := bucket.UploadFile("name0", strings.NewReader("length ten"), fileInfo)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -268,12 +267,12 @@ func Test_Bucket_UploadFile_Success(t *testing.T) {
 
 func Test_Bucket_UploadFile_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		response, err := bucket.UploadFile("", strings.NewReader(""), nil)
 		testErrorResponse(err, codes[i], t)
 		if response != nil {
@@ -285,14 +284,14 @@ func Test_Bucket_UploadFile_Errors(t *testing.T) {
 }
 
 func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	uploadUrl := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
 
-	s := setupRequest(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrl))
+	s, c := setupRequest(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrl))
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	response, err := bucket.GetUploadUrl()
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -318,12 +317,12 @@ func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
 
 func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		response, err := bucket.GetUploadUrl()
 		testErrorResponse(err, codes[i], t)
 		if response != nil {
@@ -338,9 +337,6 @@ func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 }
 
 func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	headers := map[string]string{
 		"X-Bz-File-Id":      "1",
 		"X-Bz-File-Name":    "cats.txt",
@@ -353,9 +349,11 @@ func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
 	// a newline is added at the end of the bytes
 	fileDataBytes := append(bytes.NewBufferString(fileData).Bytes(), 10)
 
-	s := setupMockServer(200, fileData, headers, nil)
+	s, c := setupMockServer(200, fileData, headers, nil)
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	file, err := bucket.DownloadFileByName("cats.txt")
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -394,12 +392,12 @@ func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
 
 func Test_Bucket_DownloadFileByName_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		file, err := bucket.DownloadFileByName("cat.txt")
 		testErrorResponse(err, codes[i], t)
 		if file != nil {
@@ -411,9 +409,6 @@ func Test_Bucket_DownloadFileByName_Errors(t *testing.T) {
 }
 
 func Test_Bucket_DownloadFileByID_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	headers := map[string]string{
 		"X-Bz-File-Id":      "1",
 		"X-Bz-File-Name":    "cats.txt",
@@ -426,9 +421,11 @@ func Test_Bucket_DownloadFileByID_Success(t *testing.T) {
 	// a newline is added at the end of the bytes
 	fileDataBytes := append(bytes.NewBufferString(fileData).Bytes(), 10)
 
-	s := setupMockServer(200, fileData, headers, nil)
+	s, c := setupMockServer(200, fileData, headers, nil)
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	file, err := bucket.DownloadFileByID("1")
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -467,12 +464,12 @@ func Test_Bucket_DownloadFileByID_Success(t *testing.T) {
 
 func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		file, err := bucket.DownloadFileByID("1")
 		testErrorResponse(err, codes[i], t)
 		if file != nil {
@@ -484,11 +481,8 @@ func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
 }
 
 func Test_Bucket_HideFile_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
 	unixTime := time.Now().Unix()
-	s := setupRequest(200, fmt.Sprintf(`{
+	s, c := setupRequest(200, fmt.Sprintf(`{
 "fileId":"1",
 "fileName":"cats.txt",
 "contentType":null,
@@ -500,6 +494,8 @@ func Test_Bucket_HideFile_Success(t *testing.T) {
 }`, unixTime))
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	fileMeta, err := bucket.HideFile("cats.txt")
 	if err != nil {
 		t.Fatalf("Expected err to be nil, instead got %+v", err)
@@ -537,12 +533,12 @@ func Test_Bucket_HideFile_Success(t *testing.T) {
 
 func Test_Bucket_HideFile_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		fileMeta, err := bucket.HideFile("cats.txt")
 		testErrorResponse(err, codes[i], t)
 		if fileMeta != nil {
@@ -554,12 +550,11 @@ func Test_Bucket_HideFile_Errors(t *testing.T) {
 }
 
 func Test_Bucket_DeleteFileVersion_Success(t *testing.T) {
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
-
-	s := setupRequest(200, `{"fileId":"1","fileName":"cats.txt"}`)
+	s, c := setupRequest(200, `{"fileId":"1","fileName":"cats.txt"}`)
 	defer s.Close()
 
+	b := makeTestB2(c)
+	bucket := makeTestBucket(b)
 	fileMeta, err := bucket.DeleteFileVersion("cats.txt", "1")
 	if err != nil {
 		t.Fatalf("Expected err to be nil, instead got %+v", err)
@@ -579,12 +574,12 @@ func Test_Bucket_DeleteFileVersion_Success(t *testing.T) {
 
 func Test_Bucket_DeleteFileVersion_Errors(t *testing.T) {
 	codes, bodies := errorResponses()
-	b := makeTestB2()
-	bucket := makeTestBucket(b)
 
 	for i := range codes {
-		s := setupRequest(codes[i], bodies[i])
+		s, c := setupRequest(codes[i], bodies[i])
 
+		b := makeTestB2(c)
+		bucket := makeTestBucket(b)
 		fileMeta, err := bucket.DeleteFileVersion("cats.txt", "1")
 		testErrorResponse(err, codes[i], t)
 		if fileMeta != nil {
@@ -596,7 +591,7 @@ func Test_Bucket_DeleteFileVersion_Errors(t *testing.T) {
 }
 
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
-	b := makeTestB2()
+	b := makeTestB2(http.Client{})
 	bucket := makeTestBucket(b)
 
 	times := []time.Time{
