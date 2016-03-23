@@ -164,6 +164,10 @@ func Test_Bucket_Delete_Errors(t *testing.T) {
 	}
 }
 
+func Test_B2_makeBucketRequest(t *testing.T) {
+	t.Skip()
+}
+
 func makeTestBucket(b *B2) *Bucket {
 	return &Bucket{
 		BucketID:   "id",
