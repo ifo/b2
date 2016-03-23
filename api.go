@@ -96,18 +96,14 @@ func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Reque
 	return req, nil
 }
 
-func (b *B2) DoRequest(req *http.Request, response interface{}) error {
+func (b *B2) DoRequest(req *http.Request, respBody interface{}) error {
 	resp, err := b.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
-		return ParseResponseBody(resp, response)
-	} else {
-		return ParseErrorResponse(resp)
-	}
+	return ParseResponse(resp, respBody)
 }
 
 func (b *B2) replaceProtocol(url string) (string, error) {
@@ -127,6 +123,14 @@ func GetBzHeaders(resp *http.Response) map[string]string {
 		}
 	}
 	return out
+}
+
+func ParseResponse(resp *http.Response, respBody interface{}) error {
+	if resp.StatusCode == 200 {
+		return ParseResponseBody(resp, respBody)
+	} else {
+		return ParseErrorResponse(resp)
+	}
 }
 
 func ParseResponseBody(resp *http.Response, respBody interface{}) error {
