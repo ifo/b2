@@ -1,7 +1,11 @@
 package b2
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
+
+	"net/http" // remove soon with refactor
 )
 
 func Test_B2_ListBuckets_Success(t *testing.T) {
@@ -165,7 +169,71 @@ func Test_Bucket_Delete_Errors(t *testing.T) {
 }
 
 func Test_B2_makeBucketRequest(t *testing.T) {
-	t.Skip()
+	b := makeTestB2(http.Client{})
+
+	reqs := [][]byte{}
+	fields := [][]byte{
+		[]byte("accountId"), []byte("bucketId"), []byte("bucketName"), []byte("bucketType")}
+	finds := [][][]byte{
+		[][]byte{fields[0]},                       // List Buckets
+		[][]byte{fields[0], fields[2], fields[3]}, // Create Bucket
+		[][]byte{fields[0], fields[1], fields[3]}, // Bucket Update
+		[][]byte{fields[0], fields[1]},            // Bucket Delete
+	}
+
+	// Setup all request bodies
+	req1, err := b.makeBucketRequest("/", "", "", "")
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	body1, err := ioutil.ReadAll(req1.Body)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	reqs = append(reqs, body1)
+
+	req2, err := b.makeBucketRequest("/", "", "name", AllPublic)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	body2, err := ioutil.ReadAll(req2.Body)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	reqs = append(reqs, body2)
+
+	req3, err := b.makeBucketRequest("/", "id", "", AllPrivate)
+	if err != nil {
+		t.Errorf("Expected no error, instead got %s", err)
+	}
+	body3, err := ioutil.ReadAll(req3.Body)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	reqs = append(reqs, body3)
+
+	req4, err := b.makeBucketRequest("/", "id", "", "")
+	if err != nil {
+		t.Errorf("Expected no error, instead got %s", err)
+	}
+	body4, err := ioutil.ReadAll(req4.Body)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+	reqs = append(reqs, body4)
+
+	for i, reqBody := range reqs {
+		for _, elem := range fields {
+			// should have but doesn't
+			if sliceContains(finds[i], elem) && !bytes.Contains(reqBody, elem) {
+				t.Errorf("reqBody should have %q, but only had %q", elem, reqBody)
+			}
+			// shouldn't have but does
+			if !sliceContains(finds[i], elem) && bytes.Contains(reqBody, elem) {
+				t.Errorf("reqBody should not have %q, but does, and has %q", elem, reqBody)
+			}
+		}
+	}
 }
 
 func makeTestBucket(b *B2) *Bucket {
@@ -175,4 +243,13 @@ func makeTestBucket(b *B2) *Bucket {
 		BucketType: AllPrivate,
 		B2:         b,
 	}
+}
+
+func sliceContains(haystack [][]byte, needle []byte) bool {
+	for _, straw := range haystack {
+		if bytes.Equal(straw, needle) {
+			return true
+		}
+	}
+	return false
 }
