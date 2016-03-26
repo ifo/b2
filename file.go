@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -50,22 +51,29 @@ type ListFileResponse struct {
 }
 
 func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
-	request := listFileRequest{
-		BucketID:      b.BucketID,
-		StartFileName: startFileName,
-		MaxFileCount:  maxFileCount,
+	req, err := b.makeListFileRequest("/b2api/v1/b2_list_file_names", startFileName, "", maxFileCount)
+	if err != nil {
+		return nil, err
 	}
-	response := &ListFileResponse{}
-	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_list_file_names", request, response)
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.listFileNames(resp)
+}
+
+func (b *Bucket) listFileNames(resp *http.Response) (*ListFileResponse, error) {
+	defer resp.Body.Close()
+	respBody := &ListFileResponse{}
+	err := ParseResponse(resp, respBody)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range response.Files {
-		response.Files[i].Bucket = b
+	for i := range respBody.Files {
+		respBody.Files[i].Bucket = b
 	}
-
-	return response, nil
+	return respBody, nil
 }
 
 func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCount int64) (*ListFileResponse, error) {
@@ -321,4 +329,19 @@ func (b *Bucket) cleanUploadUrls() {
 		}
 	}
 	b.UploadUrls = remainingUrls
+}
+
+func (b *Bucket) makeListFileRequest(path, startFileName, startFileID string, maxFileCount int64) (*http.Request, error) {
+	requestBody := listFileRequest{
+		BucketID:      b.BucketID,
+		StartFileName: startFileName,
+		StartFileID:   startFileID,
+		MaxFileCount:  maxFileCount,
+	}
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+path, requestBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
+	return req, nil
 }
