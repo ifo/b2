@@ -51,7 +51,7 @@ type ListFileResponse struct {
 }
 
 func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
-	req, err := b.makeListFileRequest("/b2api/v1/b2_list_file_names", startFileName, "", maxFileCount)
+	req, err := b.createListFileRequest("/b2api/v1/b2_list_file_names", startFileName, "", maxFileCount)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 		return nil, fmt.Errorf("If startFileID is provided, startFileName must be provided")
 	}
 
-	req, err := b.makeListFileRequest("/b2api/v1/b2_list_file_names", startFileName, startFileID, maxFileCount)
+	req, err := b.createListFileRequest("/b2api/v1/b2_list_file_names", startFileName, startFileID, maxFileCount)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 	return b.parseListFile(resp)
 }
 
-func (b *Bucket) makeListFileRequest(path, startFileName, startFileID string, maxFileCount int64) (*http.Request, error) {
+func (b *Bucket) createListFileRequest(path, startFileName, startFileID string, maxFileCount int64) (*http.Request, error) {
 	requestBody := listFileRequest{
 		BucketID:      b.BucketID,
 		StartFileName: startFileName,
