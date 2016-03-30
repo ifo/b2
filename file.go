@@ -117,14 +117,15 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	if fileID == "" {
 		return nil, fmt.Errorf("No fileID provided")
 	}
-	request := fmt.Sprintf(`{"fileId":"%s"}`, fileID)
-	response := &FileMeta{}
-	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_get_file_info", request, response)
+	req, err := b.createFileMetaRequest("/b2api/v1/b2_get_file_info", "", "", fileID)
 	if err != nil {
 		return nil, err
 	}
-	response.Bucket = b
-	return response, nil
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.parseFileMetaResponse(resp)
 }
 
 func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]string) (*FileMeta, error) {
