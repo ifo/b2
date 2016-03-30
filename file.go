@@ -50,6 +50,12 @@ type ListFileResponse struct {
 	NextFileID   string     `json:"nextFileId"`
 }
 
+type fileMetaRequest struct {
+	BucketID string `json:"bucketId,omitempty"`
+	FileName string `json:"fileName,omitempty"`
+	FileID   string `json:"fileId,omitempty"`
+}
+
 func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
 	req, err := b.createListFileRequest("/b2api/v1/b2_list_file_names", startFileName, "", maxFileCount)
 	if err != nil {
@@ -322,6 +328,33 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 		return nil, err
 	}
 	return response, nil
+}
+
+func (b *Bucket) createFileMetaRequest(path, bucketID, fileName, fileID string) (*http.Request, error) {
+	requestBody := &fileMetaRequest{
+		BucketID: bucketID,
+		FileName: fileName,
+		FileID:   fileID,
+	}
+
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+path, requestBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
+	return req, nil
+}
+
+func (b *Bucket) parseFileMetaResponse(resp *http.Response) (*FileMeta, error) {
+	defer resp.Body.Close()
+	respBody := &FileMeta{}
+	err := ParseResponse(resp, respBody)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody.Bucket = b
+	return respBody, nil
 }
 
 func (b *Bucket) cleanUploadUrls() {

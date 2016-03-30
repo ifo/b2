@@ -590,6 +590,14 @@ func Test_Bucket_DeleteFileVersion_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_createFileMetaRequest(t *testing.T) {
+	t.Skip()
+}
+
+func Test_Bucket_parseFileMetaResponse(t *testing.T) {
+	t.Skip()
+}
+
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	b := makeTestB2(http.Client{})
 	bucket := makeTestBucket(b)
