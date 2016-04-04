@@ -69,10 +69,6 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 }
 
 func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCount int64) (*ListFileResponse, error) {
-	if startFileID != "" && startFileName == "" {
-		return nil, fmt.Errorf("If startFileID is provided, startFileName must be provided")
-	}
-
 	req, err := b.createListFileRequest("/b2api/v1/b2_list_file_names", startFileName, startFileID, maxFileCount)
 	if err != nil {
 		return nil, err
@@ -85,6 +81,10 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 }
 
 func (b *Bucket) createListFileRequest(path, startFileName, startFileID string, maxFileCount int64) (*http.Request, error) {
+	if startFileID != "" && startFileName == "" {
+		return nil, fmt.Errorf("If startFileID is provided, startFileName must be provided")
+	}
+
 	requestBody := listFileRequest{
 		BucketID:      b.BucketID,
 		StartFileName: startFileName,
