@@ -57,10 +57,15 @@ type fileMetaRequest struct {
 }
 
 func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
-	req, err := b.createListFileRequest("/b2api/v1/b2_list_file_names", startFileName, "", maxFileCount)
+	requestBody := listFileRequest{
+		StartFileName: startFileName,
+		MaxFileCount:  maxFileCount,
+	}
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
 	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -69,18 +74,6 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 }
 
 func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCount int64) (*ListFileResponse, error) {
-	req, err := b.createListFileRequest("/b2api/v1/b2_list_file_names", startFileName, startFileID, maxFileCount)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := b.B2.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return b.parseListFile(resp)
-}
-
-func (b *Bucket) createListFileRequest(path, startFileName, startFileID string, maxFileCount int64) (*http.Request, error) {
 	if startFileID != "" && startFileName == "" {
 		return nil, fmt.Errorf("If startFileID is provided, startFileName must be provided")
 	}
@@ -91,12 +84,16 @@ func (b *Bucket) createListFileRequest(path, startFileName, startFileID string, 
 		StartFileID:   startFileID,
 		MaxFileCount:  maxFileCount,
 	}
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+path, requestBody)
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	return req, nil
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.parseListFile(resp)
 }
 
 func (b *Bucket) parseListFile(resp *http.Response) (*ListFileResponse, error) {
