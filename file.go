@@ -117,10 +117,12 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	if fileID == "" {
 		return nil, fmt.Errorf("No fileID provided")
 	}
-	req, err := b.createFileMetaRequest("/b2api/v1/b2_get_file_info", "", "", fileID)
+	requestBody := fileMetaRequest{FileID: fileID}
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_file_info", requestBody)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
 	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -163,20 +165,11 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	}
 	// TODO include X-Bz-Info-src_last_modified_millis
 
-	response := &FileMeta{Bucket: b}
 	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	err = ParseResponseBody(resp, response)
-	if err != nil {
-		return nil, err
-	}
-	response.FileInfo = GetBzHeaders(resp)
-
-	return response, nil
+	return b.parseFileMetaResponse(resp)
 }
 
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
@@ -311,39 +304,37 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 }
 
 func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
-	request := fmt.Sprintf(`{"fileName":"%s","bucketId":"%s"}`, fileName, b.BucketID)
-	response := &FileMeta{Bucket: b}
-	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_hide_file", request, response)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-// TODO? return only the fileName and fileId, instead of mostly blank FileMeta
-func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
-	request := fmt.Sprintf(`{"fileName":"%s","fileId":"%s"}`, fileName, fileID)
-	response := &FileMeta{Bucket: b}
-	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_delete_file_version", request, response)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func (b *Bucket) createFileMetaRequest(path, bucketID, fileName, fileID string) (*http.Request, error) {
-	requestBody := &fileMetaRequest{
-		BucketID: bucketID,
+	requestBody := fileMetaRequest{
+		BucketID: b.BucketID,
 		FileName: fileName,
-		FileID:   fileID,
 	}
-
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+path, requestBody)
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_hide_file", requestBody)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	return req, nil
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.parseFileMetaResponse(resp)
+}
+
+func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
+	requestBody := fileMetaRequest{
+		FileName: fileName,
+		FileID:   fileID,
+	}
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_delete_file_version", requestBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.parseFileMetaResponse(resp)
 }
 
 func (b *Bucket) parseFileMetaResponse(resp *http.Response) (*FileMeta, error) {
