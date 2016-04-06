@@ -333,7 +333,7 @@ func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 			t.Errorf("Expected response to be empty, instead got %+v", response)
 		}
 		if len(bucket.UploadUrls) != 0 {
-			t.Errorf("Expected no upload urls, instead got %d", bucket.UploadUrls)
+			t.Errorf("Expected no upload urls, instead got %+v", bucket.UploadUrls)
 		}
 
 		s.Close()

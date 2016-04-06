@@ -73,7 +73,7 @@ func Test_B2_CreateBucket_Success(t *testing.T) {
 		t.Errorf("Expected bucket type to be private, instead got %s", bucket.BucketType)
 	}
 	if bucket.B2 != b {
-		t.Errorf("Expected bucket B2 to be test B2, instead got %s", bucket.B2)
+		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
 	}
 }
 
@@ -119,7 +119,7 @@ func Test_Bucket_Update_Success(t *testing.T) {
 		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
 	}
 	if bucket.B2 != b {
-		t.Errorf("Expected bucket B2 to be test B2, instead got %s", bucket.B2)
+		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
 	}
 }
 
