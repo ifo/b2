@@ -480,6 +480,10 @@ func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_parseFileResponse(t *testing.T) {
+	t.Skip()
+}
+
 func Test_Bucket_HideFile_Success(t *testing.T) {
 	unixTime := time.Now().Unix()
 	s, c := setupRequest(200, fmt.Sprintf(`{

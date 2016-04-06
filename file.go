@@ -197,47 +197,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-
-	fileBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		errJson := errorResponse{}
-		if err := json.Unmarshal(fileBytes, &errJson); err != nil {
-			return nil, err
-		}
-
-		return nil, errJson
-	}
-
-	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
-	if err != nil {
-		return nil, err
-	}
-
-	if fmt.Sprintf("%x", sha1.Sum(fileBytes)) != resp.Header.Get("X-Bz-Content-Sha1") {
-		// TODO? retry download
-		return nil, fmt.Errorf("File sha1 didn't match provided sha1")
-	}
-
-	// TODO collect "X-Bz-Info-*" headers
-
-	return &File{
-		Meta: FileMeta{
-			ID:            resp.Header.Get("X-Bz-File-Id"),
-			Name:          resp.Header.Get("X-Bz-File-Name"),
-			Size:          int64(len(fileBytes)),
-			ContentLength: int64(contentLength),
-			ContentSha1:   resp.Header.Get("X-Bz-Content-Sha1"),
-			ContentType:   resp.Header.Get("Content-Type"),
-			FileInfo:      nil,
-			Bucket:        b,
-		},
-		Data: fileBytes,
-	}, nil
+	return b.parseFileResponse(resp)
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
@@ -257,6 +217,10 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
+	return b.parseFileResponse(resp)
+}
+
+func (b *Bucket) parseFileResponse(resp *http.Response) (*File, error) {
 	defer resp.Body.Close()
 
 	fileBytes, err := ioutil.ReadAll(resp.Body)
