@@ -335,6 +335,8 @@ func (b *Bucket) parseFileMetaResponse(resp *http.Response) (*FileMeta, error) {
 }
 
 func (b *Bucket) cleanUploadUrls() {
+	// TODO prevent this from deleting an upload Url that is in use
+	// requires upload urls to track self usage
 	if len(b.UploadUrls) == 0 {
 		return
 	}
