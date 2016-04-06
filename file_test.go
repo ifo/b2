@@ -283,6 +283,10 @@ func Test_Bucket_UploadFile_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_setupUploadFile(t *testing.T) {
+	t.Skip()
+}
+
 func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
 
 	uploadUrl := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"

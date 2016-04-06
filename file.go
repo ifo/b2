@@ -128,6 +128,19 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 }
 
 func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]string) (*FileMeta, error) {
+	req, err := b.setupUploadFile(name, file, fileInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.parseFileMetaResponse(resp)
+}
+
+func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[string]string) (*http.Request, error) {
 	b.cleanUploadUrls()
 
 	uploadUrl := &UploadUrl{}
@@ -162,11 +175,7 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	}
 	// TODO include X-Bz-Info-src_last_modified_millis
 
-	resp, err := b.B2.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return b.parseFileMetaResponse(resp)
+	return req, nil
 }
 
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
