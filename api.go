@@ -53,13 +53,20 @@ func makeB2(accountId, appKey string, client *client) (*B2, error) {
 		client:         client,
 	}
 
-	authResp := &authResponse{}
 	req, err := b.CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
 	if err != nil {
 		return nil, err
 	}
 	req.SetBasicAuth(accountId, appKey)
-	err = b.DoRequest(req, authResp)
+
+	resp, err := b.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	authResp := &authResponse{}
+	err = ParseResponse(resp, authResp)
 	if err != nil {
 		return nil, err
 	}
@@ -85,16 +92,6 @@ func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Reque
 		return nil, err
 	}
 	return req, nil
-}
-
-func (b *B2) DoRequest(req *http.Request, respBody interface{}) error {
-	resp, err := b.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return ParseResponse(resp, respBody)
 }
 
 func (b *B2) replaceProtocol(url string) (string, error) {
