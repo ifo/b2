@@ -153,7 +153,7 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	}
 
 	req.Header.Set("Authorization", uploadUrl.AuthorizationToken)
-	req.Header.Set("X-Bz-File-Name", "")
+	req.Header.Set("X-Bz-File-Name", name)
 	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
 	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
 	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(fileBytes)))
