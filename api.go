@@ -71,15 +71,6 @@ func makeB2(accountId, appKey string, client *client) (*B2, error) {
 	return b, nil
 }
 
-func (b *B2) ApiRequest(method, urlPart string, request, response interface{}) error {
-	req, err := b.CreateRequest(method, b.ApiUrl+urlPart, request)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", b.AuthorizationToken)
-	return b.DoRequest(req, response)
-}
-
 func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Request, error) {
 	reqBody, err := json.Marshal(request)
 	if err != nil {

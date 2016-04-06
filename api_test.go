@@ -73,24 +73,6 @@ func Test_MakeB2_Errors(t *testing.T) {
 	}
 }
 
-func Test_B2_ApiRequest_HasAuth(t *testing.T) {
-	reqChan := make(chan *http.Request, 1)
-	s, c := setupMockJsonServer(200, "", reqChan)
-	defer s.Close()
-
-	b := makeTestB2(c)
-
-	b.ApiRequest("GET", "", nil, nil)
-
-	// get the request that the mock server received
-	req := <-reqChan
-
-	authToken := req.Header.Get("Authorization")
-	if authToken != b.AuthorizationToken {
-		t.Errorf("Expected auth token to be %s, instead got %s", b.AuthorizationToken, authToken)
-	}
-}
-
 func setupRequest(code int, body string) (*httptest.Server, http.Client) {
 	return setupMockJsonServer(code, body, nil)
 }
