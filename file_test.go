@@ -336,6 +336,10 @@ func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
 	}
 }
 
+func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
+	t.Skip()
+}
+
 func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
 	headers := map[string]string{
 		"X-Bz-File-Id":      "1",

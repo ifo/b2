@@ -170,14 +170,29 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 }
 
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
-	request := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
-	response := &UploadUrl{Expiration: time.Now().UTC().Add(24 * time.Hour)}
-	err := b.B2.ApiRequest("POST", "/b2api/v1/b2_get_upload_url", request, response)
+	requestBody := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
+	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_upload_url", requestBody)
 	if err != nil {
 		return nil, err
 	}
-	b.UploadUrls = append(b.UploadUrls, response)
-	return response, nil
+
+	resp, err := b.B2.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return b.parseGetUploadUrlResponse(resp)
+}
+
+func (b *Bucket) parseGetUploadUrlResponse(resp *http.Response) (*UploadUrl, error) {
+	defer resp.Body.Close()
+
+	uploadUrl := &UploadUrl{Expiration: time.Now().UTC().Add(24 * time.Hour)}
+	err := ParseResponse(resp, uploadUrl)
+	if err != nil {
+		return nil, err
+	}
+	b.UploadUrls = append(b.UploadUrls, uploadUrl)
+	return uploadUrl, nil
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
