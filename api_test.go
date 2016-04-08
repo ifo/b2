@@ -77,6 +77,18 @@ func Test_parseCreateB2Response(t *testing.T) {
 	t.Skip()
 }
 
+func Test_B2_CreateRequest(t *testing.T) {
+	t.Skip()
+}
+
+func Test_replaceProtocol(t *testing.T) {
+	t.Skip()
+}
+
+func Test_GetBzHeaders(t *testing.T) {
+	t.Skip()
+}
+
 func setupRequest(code int, body string) (*httptest.Server, http.Client) {
 	return setupMockJsonServer(code, body, nil)
 }
