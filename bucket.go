@@ -39,7 +39,12 @@ type bucketRequest struct {
 }
 
 func (b *B2) ListBuckets() ([]Bucket, error) {
-	resp, err := b.makeAndDoBucketRequest("/b2api/v1/b2_list_buckets", "", "", "")
+	req, err := b.createBucketRequest("/b2api/v1/b2_list_buckets", bucketRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := b.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +65,14 @@ func (b *B2) listBuckets(resp *http.Response) ([]Bucket, error) {
 	return respBody.Buckets, nil
 }
 
-func (b *B2) CreateBucket(name string, bType BucketType) (*Bucket, error) {
-	resp, err := b.makeAndDoBucketRequest("/b2api/v1/b2_list_buckets", "", name, bType)
+func (b *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
+	br := bucketRequest{BucketName: name, BucketType: bucketType}
+	req, err := b.createBucketRequest("/b2api/v1/b2_list_buckets", br)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := b.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +90,13 @@ func (b *B2) createBucket(resp *http.Response) (*Bucket, error) {
 }
 
 func (b *Bucket) Update(newBucketType BucketType) error {
-	resp, err := b.B2.makeAndDoBucketRequest("/b2api/v1/b2_update_bucket", b.BucketID, "", newBucketType)
+	br := bucketRequest{BucketID: b.BucketID, BucketType: newBucketType}
+	req, err := b.B2.createBucketRequest("/b2api/v1/b2_update_bucket", br)
+	if err != nil {
+		return err
+	}
+
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -92,7 +109,13 @@ func (b *Bucket) update(resp *http.Response) error {
 }
 
 func (b *Bucket) Delete() error {
-	resp, err := b.B2.makeAndDoBucketRequest("/b2api/v1/b2_delete_bucket", b.BucketID, "", "")
+	br := bucketRequest{BucketID: b.BucketID}
+	req, err := b.B2.createBucketRequest("/b2api/v1/b2_delete_bucket", br)
+	if err != nil {
+		return err
+	}
+
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -104,22 +127,9 @@ func (b *Bucket) bucketDelete(resp *http.Response) error {
 	return ParseResponse(resp, b)
 }
 
-func (b *B2) makeAndDoBucketRequest(path, bucketID, bucketName string, bucketType BucketType) (*http.Response, error) {
-	req, err := b.makeBucketRequest(path, bucketID, bucketName, bucketType)
-	if err != nil {
-		return nil, err
-	}
-	return b.client.Do(req)
-}
-
-func (b *B2) makeBucketRequest(path, bucketID, bucketName string, bucketType BucketType) (*http.Request, error) {
-	requestBody := bucketRequest{
-		AccountID:  b.AccountID,
-		BucketID:   bucketID,
-		BucketName: bucketName,
-		BucketType: bucketType,
-	}
-	req, err := b.CreateRequest("POST", b.ApiUrl+path, requestBody)
+func (b *B2) createBucketRequest(path string, br bucketRequest) (*http.Request, error) {
+	br.AccountID = b.AccountID
+	req, err := b.CreateRequest("POST", b.ApiUrl+path, br)
 	if err != nil {
 		return nil, err
 	}

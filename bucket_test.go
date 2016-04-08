@@ -168,12 +168,18 @@ func Test_Bucket_Delete_Errors(t *testing.T) {
 	}
 }
 
-func Test_B2_makeBucketRequest(t *testing.T) {
+func Test_B2_createBucketRequest(t *testing.T) {
 	b := makeTestB2(http.Client{})
 
 	reqs := [][]byte{}
 	fields := [][]byte{
 		[]byte("accountId"), []byte("bucketId"), []byte("bucketName"), []byte("bucketType")}
+	brs := []bucketRequest{
+		bucketRequest{},                                            // List Buckets
+		bucketRequest{BucketName: "bucket", BucketType: AllPublic}, // Create Bucket
+		bucketRequest{BucketID: "id", BucketType: AllPrivate},      // Bucket Update
+		bucketRequest{BucketID: "id"},                              // Bucket Delete
+	}
 	finds := [][][]byte{
 		[][]byte{fields[0]},                       // List Buckets
 		[][]byte{fields[0], fields[2], fields[3]}, // Create Bucket
@@ -182,7 +188,7 @@ func Test_B2_makeBucketRequest(t *testing.T) {
 	}
 
 	// Setup all request bodies
-	req1, err := b.makeBucketRequest("/", "", "", "")
+	req1, err := b.createBucketRequest("/", brs[0])
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -192,7 +198,7 @@ func Test_B2_makeBucketRequest(t *testing.T) {
 	}
 	reqs = append(reqs, body1)
 
-	req2, err := b.makeBucketRequest("/", "", "name", AllPublic)
+	req2, err := b.createBucketRequest("/", brs[1])
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -202,7 +208,7 @@ func Test_B2_makeBucketRequest(t *testing.T) {
 	}
 	reqs = append(reqs, body2)
 
-	req3, err := b.makeBucketRequest("/", "id", "", AllPrivate)
+	req3, err := b.createBucketRequest("/", brs[2])
 	if err != nil {
 		t.Errorf("Expected no error, instead got %s", err)
 	}
@@ -212,7 +218,7 @@ func Test_B2_makeBucketRequest(t *testing.T) {
 	}
 	reqs = append(reqs, body3)
 
-	req4, err := b.makeBucketRequest("/", "id", "", "")
+	req4, err := b.createBucketRequest("/", brs[3])
 	if err != nil {
 		t.Errorf("Expected no error, instead got %s", err)
 	}
