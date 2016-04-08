@@ -8,13 +8,13 @@ import (
 	"testing"
 )
 
-func Test_makeB2_Success(t *testing.T) {
+func Test_createB2_Success(t *testing.T) {
 	s, c := setupRequest(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 	defer s.Close()
 
 	client := &client{Protocol: "http", Client: c}
 
-	b, err := makeB2("1", "1", client)
+	b, err := createB2("1", "1", client)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -33,14 +33,14 @@ func Test_makeB2_Success(t *testing.T) {
 	}
 }
 
-func Test_makeB2_HasAuth(t *testing.T) {
+func Test_createB2_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
 	s, c := setupMockJsonServer(200, "", reqChan)
 	defer s.Close()
 
 	client := &client{Protocol: "http", Client: c}
 
-	makeB2("1", "1", client)
+	createB2("1", "1", client)
 
 	// get the request that the mock server received
 	req := <-reqChan
@@ -63,7 +63,7 @@ func Test_MakeB2_Errors(t *testing.T) {
 		s, c := setupRequest(codes[i], bodies[i])
 
 		client := &client{Protocol: "http", Client: c}
-		b, err := makeB2("1", "1", client)
+		b, err := createB2("1", "1", client)
 		testErrorResponse(err, codes[i], t)
 		if b != nil {
 			t.Errorf("Expected b to be empty, instead got %+v", b)

@@ -41,12 +41,12 @@ func (e errorResponse) Error() string {
 	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
 }
 
-func MakeB2(accountId, appKey string) (*B2, error) {
+func CreateB2(accountId, appKey string) (*B2, error) {
 	c := &client{Protocol: "https", Client: http.Client{}}
-	return makeB2(accountId, appKey, c)
+	return createB2(accountId, appKey, c)
 }
 
-func makeB2(accountId, appKey string, client *client) (*B2, error) {
+func createB2(accountId, appKey string, client *client) (*B2, error) {
 	b := &B2{
 		AccountID:      accountId,
 		ApplicationKey: appKey,
