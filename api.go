@@ -67,8 +67,6 @@ func createB2(accountId, appKey string, client *client) (*B2, error) {
 }
 
 func (b *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
-	defer resp.Body.Close()
-
 	authResp := &authResponse{}
 	err := ParseResponse(resp, authResp)
 	if err != nil {
@@ -118,6 +116,7 @@ func GetBzHeaders(resp *http.Response) map[string]string {
 }
 
 func ParseResponse(resp *http.Response, respBody interface{}) error {
+	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		return ParseResponseBody(resp, respBody)
 	} else {

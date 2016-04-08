@@ -52,7 +52,6 @@ func (b *B2) ListBuckets() ([]Bucket, error) {
 }
 
 func (b *B2) listBuckets(resp *http.Response) ([]Bucket, error) {
-	defer resp.Body.Close()
 	respBody := &listBucketsResponse{}
 	err := ParseResponse(resp, respBody)
 	if err != nil {
@@ -80,7 +79,6 @@ func (b *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
 }
 
 func (b *B2) createBucket(resp *http.Response) (*Bucket, error) {
-	defer resp.Body.Close()
 	bucket := &Bucket{B2: b}
 	err := ParseResponse(resp, bucket)
 	if err != nil {
@@ -104,7 +102,6 @@ func (b *Bucket) Update(newBucketType BucketType) error {
 }
 
 func (b *Bucket) update(resp *http.Response) error {
-	defer resp.Body.Close()
 	return ParseResponse(resp, b)
 }
 
@@ -123,7 +120,6 @@ func (b *Bucket) Delete() error {
 }
 
 func (b *Bucket) bucketDelete(resp *http.Response) error {
-	defer resp.Body.Close()
 	return ParseResponse(resp, b)
 }
 
