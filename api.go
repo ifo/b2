@@ -63,10 +63,14 @@ func createB2(accountId, appKey string, client *client) (*B2, error) {
 	if err != nil {
 		return nil, err
 	}
+	return b.parseCreateB2Response(resp)
+}
+
+func (b *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
 	defer resp.Body.Close()
 
 	authResp := &authResponse{}
-	err = ParseResponse(resp, authResp)
+	err := ParseResponse(resp, authResp)
 	if err != nil {
 		return nil, err
 	}

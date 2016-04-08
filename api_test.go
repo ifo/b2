@@ -73,6 +73,10 @@ func Test_MakeB2_Errors(t *testing.T) {
 	}
 }
 
+func Test_parseCreateB2Response(t *testing.T) {
+	t.Skip()
+}
+
 func setupRequest(code int, body string) (*httptest.Server, http.Client) {
 	return setupMockJsonServer(code, body, nil)
 }
