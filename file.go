@@ -2,7 +2,6 @@ package b2
 
 import (
 	"crypto/sha1"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -244,19 +243,13 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 func (b *Bucket) parseFileResponse(resp *http.Response) (*File, error) {
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return nil, ParseErrorResponse(resp)
+	}
+
 	fileBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
-	}
-
-	// TODO use ParseResponse
-	if resp.StatusCode != 200 {
-		errJson := errorResponse{}
-		if err := json.Unmarshal(fileBytes, &errJson); err != nil {
-			return nil, err
-		}
-
-		return nil, errJson
 	}
 
 	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
