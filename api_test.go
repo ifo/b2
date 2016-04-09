@@ -82,7 +82,43 @@ func Test_B2_CreateRequest(t *testing.T) {
 }
 
 func Test_replaceProtocol(t *testing.T) {
-	t.Skip()
+	b2s := []B2{
+		B2{client: &client{Protocol: "https"}},
+		B2{client: &client{Protocol: "http"}},
+		B2{client: &client{Protocol: "kittens"}},
+	}
+	urls := []string{
+		"http://localhost", "https://localhost", "http://localhost", "kittens://localhost",
+		"https://www.backblaze.com/", "https://www.backblaze.com/",
+		"http://www.backblaze.com/", "kittens://www.backblaze.com/",
+		"non/url/",
+	}
+
+	for i, b := range b2s {
+		index, i2, index2 := i+1, i+4, i+5 // make offsets
+		// localhost
+		url, err := b.replaceProtocol(urls[i])
+		if err != nil {
+			t.Errorf("Expected no error, instead got %+v", err)
+		}
+		if url != urls[index] {
+			t.Errorf("Expected url to be %s, instead got %s", urls[index], url)
+		}
+
+		// www.backblaze.com
+		url, err = b.replaceProtocol(urls[i2])
+		if err != nil {
+			t.Errorf("Expected no error, instead got %+v", err)
+		}
+		if url != urls[index2] {
+			t.Errorf("Expected url to be %s, instead got %s", urls[index2], url)
+		}
+	}
+
+	url, err := b2s[0].replaceProtocol(urls[len(urls)-1])
+	if err == nil {
+		t.Errorf("Expected error, instead got nil, url returned was %s", url)
+	}
 }
 
 func Test_GetBzHeaders(t *testing.T) {
