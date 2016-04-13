@@ -262,8 +262,6 @@ func (b *Bucket) parseFileResponse(resp *http.Response) (*File, error) {
 		return nil, fmt.Errorf("File sha1 didn't match provided sha1")
 	}
 
-	// TODO collect "X-Bz-Info-*" headers
-
 	return &File{
 		Meta: FileMeta{
 			ID:            resp.Header.Get("X-Bz-File-Id"),
@@ -272,7 +270,7 @@ func (b *Bucket) parseFileResponse(resp *http.Response) (*File, error) {
 			ContentLength: int64(contentLength),
 			ContentSha1:   resp.Header.Get("X-Bz-Content-Sha1"),
 			ContentType:   resp.Header.Get("Content-Type"),
-			FileInfo:      nil,
+			FileInfo:      GetBzInfoHeaders(resp),
 			Bucket:        b,
 		},
 		Data: fileBytes,
