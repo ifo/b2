@@ -121,8 +121,28 @@ func Test_replaceProtocol(t *testing.T) {
 	}
 }
 
-func Test_GetBzHeaders(t *testing.T) {
-	t.Skip()
+func Test_GetBzInfoHeaders(t *testing.T) {
+	headers := map[string][]string{
+		"Content-Type":      []string{"kittens"},
+		"X-Bz-Info-kittens": []string{"yes"},
+		"X-Bz-Info-thing":   []string{"one"},
+	}
+	resp := &http.Response{Header: headers}
+
+	bzHeaders := GetBzInfoHeaders(resp)
+
+	if len(bzHeaders) != 2 {
+		t.Fatalf("Expected length of headers to be 2, instead got %d", len(bzHeaders))
+	}
+	if h, ok := bzHeaders["Content-Type"]; ok {
+		t.Errorf("Expected no Content-Type, instead recieved %s", h)
+	}
+	if h := bzHeaders["kittens"]; h != "yes" {
+		t.Errorf(`Expected kittens to be "yes", instead got %s`, h)
+	}
+	if h := bzHeaders["thing"]; h != "one" {
+		t.Errorf(`Expected thing to be "one", instead got %s`, h)
+	}
 }
 
 func setupRequest(code int, body string) (*httptest.Server, http.Client) {
@@ -155,7 +175,6 @@ func setupMockServer(code int, body string, headers map[string]string, reqChan c
 	}
 
 	return server, http.Client{Transport: tr}
-
 }
 
 func errorResponses() ([]int, []string) {

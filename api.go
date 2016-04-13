@@ -104,7 +104,7 @@ func (b *B2) replaceProtocol(url string) (string, error) {
 	return b.client.Protocol + url[protoTrim:], nil
 }
 
-func GetBzHeaders(resp *http.Response) map[string]string {
+func GetBzInfoHeaders(resp *http.Response) map[string]string {
 	out := map[string]string{}
 	for k, v := range resp.Header {
 		if strings.HasPrefix(k, "X-Bz-Info-") {
