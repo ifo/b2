@@ -89,11 +89,7 @@ func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(method, url, bytes.NewReader(reqBody))
-	if err != nil {
-		return nil, err
-	}
-	return req, nil
+	return http.NewRequest(method, url, bytes.NewReader(reqBody))
 }
 
 func (b *B2) replaceProtocol(url string) (string, error) {
