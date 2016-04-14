@@ -78,7 +78,36 @@ func Test_parseCreateB2Response(t *testing.T) {
 }
 
 func Test_B2_CreateRequest(t *testing.T) {
-	t.Skip()
+	b2 := &B2{client: &client{Protocol: "https"}} // set client protocol to default
+
+	methods := []string{"GET", "POST", "KITTENS", "POST"}
+	urls := []string{"http://example.com", "kittens://example.com", "aoeu://example.com",
+		"invalid-url"}
+	reqBody := struct {
+		a int `json:"a"`
+	}{a: 1}
+
+	for i := 0; i < 3; i++ {
+		req, err := b2.CreateRequest(methods[i], urls[i], reqBody)
+		if err != nil {
+			t.Fatalf("Expected err to be nil, instead got %+v", err)
+		}
+		if req.URL.Scheme != "https" {
+			t.Errorf(`Expected url protocol to be "https", instead got %s`, req.URL.Scheme)
+		}
+		if req.Body == nil {
+			t.Error("Expected req.Body to not be nil")
+		}
+	}
+	for i := 3; i < 4; i++ {
+		req, err := b2.CreateRequest(methods[i], urls[i], reqBody)
+		if req != nil {
+			t.Errorf("Expected req to be nil, instead got %+v", req)
+		}
+		if err == nil {
+			t.Fatal("Expected err to exist")
+		}
+	}
 }
 
 func Test_replaceProtocol(t *testing.T) {
