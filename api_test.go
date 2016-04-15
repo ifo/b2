@@ -80,9 +80,14 @@ func Test_parseCreateB2Response(t *testing.T) {
 func Test_B2_CreateRequest(t *testing.T) {
 	b2 := &B2{client: &client{Protocol: "https"}} // set client protocol to default
 
-	methods := []string{"GET", "POST", "KITTENS", "POST"}
-	urls := []string{"http://example.com", "kittens://example.com", "aoeu://example.com",
-		"invalid-url"}
+	methods := []string{
+		"GET", "POST", "KITTENS",
+		"POST", "BAD METHOD",
+	}
+	urls := []string{
+		"http://example.com", "kittens://example.com", "aoeu://example.com",
+		"invalid-url", "http://example.com",
+	}
 	reqBody := struct {
 		a int `json:"a"`
 	}{a: 1}
@@ -99,7 +104,7 @@ func Test_B2_CreateRequest(t *testing.T) {
 			t.Error("Expected req.Body to not be nil")
 		}
 	}
-	for i := 3; i < 4; i++ {
+	for i := 3; i < 5; i++ {
 		req, err := b2.CreateRequest(methods[i], urls[i], reqBody)
 		if req != nil {
 			t.Errorf("Expected req to be nil, instead got %+v", req)
