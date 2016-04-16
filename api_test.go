@@ -2,34 +2,28 @@ package b2
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
-func Test_createB2_Success(t *testing.T) {
-	s, c := setupRequest(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
-	defer s.Close()
+// TODO replace with parseCreateB2Response test
+func Test_CreateB2_Errors(t *testing.T) {
+	codes, bodies := errorResponses()
+	for i := range codes {
+		s, c := setupRequest(codes[i], bodies[i])
 
-	client := &client{Protocol: "http", Client: c}
+		client := &client{Protocol: "http", Client: c}
+		b, err := createB2("1", "1", client)
+		testErrorResponse(err, codes[i], t)
+		if b != nil {
+			t.Errorf("Expected b to be empty, instead got %+v", b)
+		}
 
-	b, err := createB2("1", "1", client)
-	if err != nil {
-		t.Fatalf("Expected no error, instead got %s", err)
-	}
-
-	if b.AccountID != "1" {
-		t.Errorf(`Expected AccountID to be "1", instead got %s`, b.AccountID)
-	}
-	if b.AuthorizationToken != "1" {
-		t.Errorf(`Expected AuthorizationToken to be "1", instead got %s`, b.AuthorizationToken)
-	}
-	if b.ApiUrl != "/" {
-		t.Errorf(`Expected AccountID to be "/", instead got %s`, b.ApiUrl)
-	}
-	if b.DownloadUrl != "/" {
-		t.Errorf(`Expected AccountID to be "/", instead got %s`, b.DownloadUrl)
+		s.Close()
 	}
 }
 
@@ -57,24 +51,31 @@ func Test_createB2_HasAuth(t *testing.T) {
 	}
 }
 
-func Test_MakeB2_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		client := &client{Protocol: "http", Client: c}
-		b, err := createB2("1", "1", client)
-		testErrorResponse(err, codes[i], t)
-		if b != nil {
-			t.Errorf("Expected b to be empty, instead got %+v", b)
-		}
-
-		s.Close()
-	}
-}
-
 func Test_parseCreateB2Response(t *testing.T) {
-	t.Skip()
+	resp := &http.Response{
+		StatusCode: 200,
+		Body: nopCloser{
+			strings.NewReader(`{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)},
+	}
+
+	b := &B2{AccountID: "1", ApplicationKey: "key"}
+	b, err := b.parseCreateB2Response(resp)
+	if err != nil {
+		t.Fatalf("Expected err to be nil, instead got %+v", err)
+	}
+
+	if b.AccountID != "1" {
+		t.Errorf(`Expected AccountID to be "1", instead got %s`, b.AccountID)
+	}
+	if b.AuthorizationToken != "1" {
+		t.Errorf(`Expected AuthorizationToken to be "1", instead got %s`, b.AuthorizationToken)
+	}
+	if b.ApiUrl != "/" {
+		t.Errorf(`Expected ApiUrl to be "/", instead got %s`, b.ApiUrl)
+	}
+	if b.DownloadUrl != "/" {
+		t.Errorf(`Expected DownloadUrl to be "/", instead got %s`, b.DownloadUrl)
+	}
 }
 
 func Test_B2_CreateRequest(t *testing.T) {
@@ -179,15 +180,18 @@ func Test_GetBzInfoHeaders(t *testing.T) {
 	}
 }
 
+// TODO remove
 func setupRequest(code int, body string) (*httptest.Server, http.Client) {
 	return setupMockJsonServer(code, body, nil)
 }
 
+// TODO remove
 func setupMockJsonServer(code int, body string, reqChan chan<- *http.Request) (*httptest.Server, http.Client) {
 	headers := map[string]string{"Content-Type": "application/json"}
 	return setupMockServer(code, body, headers, reqChan)
 }
 
+// TODO remove
 func setupMockServer(code int, body string, headers map[string]string, reqChan chan<- *http.Request) (*httptest.Server, http.Client) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if reqChan != nil {
@@ -211,6 +215,7 @@ func setupMockServer(code int, body string, headers map[string]string, reqChan c
 	return server, http.Client{Transport: tr}
 }
 
+// TODO replace with non-200 *http.Response creator
 func errorResponses() ([]int, []string) {
 	codes := []int{400, 401}
 	bodies := []string{
@@ -237,3 +242,9 @@ func makeTestB2(c http.Client) *B2 {
 		client:             &client{Protocol: "http", Client: c},
 	}
 }
+
+type nopCloser struct {
+	io.Reader
+}
+
+func (nopCloser) Close() error { return nil }
