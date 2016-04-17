@@ -10,23 +10,6 @@ import (
 	"testing"
 )
 
-// TODO replace with parseCreateB2Response test
-func Test_CreateB2_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		client := &client{Protocol: "http", Client: c}
-		b, err := createB2("1", "1", client)
-		testErrorResponse(err, codes[i], t)
-		if b != nil {
-			t.Errorf("Expected b to be empty, instead got %+v", b)
-		}
-
-		s.Close()
-	}
-}
-
 func Test_createB2_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
 	s, c := setupMockJsonServer(200, "", reqChan)
@@ -52,9 +35,8 @@ func Test_createB2_HasAuth(t *testing.T) {
 }
 
 func Test_parseCreateB2Response(t *testing.T) {
-	resp := &http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(strings.NewReader(`{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`))}
+	// success
+	resp := createTestResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 
 	b := &B2{AccountID: "1", ApplicationKey: "key"}
 	b, err := b.parseCreateB2Response(resp)
@@ -73,6 +55,17 @@ func Test_parseCreateB2Response(t *testing.T) {
 	}
 	if b.DownloadUrl != "/" {
 		t.Errorf(`Expected DownloadUrl to be "/", instead got %s`, b.DownloadUrl)
+	}
+
+	// errors
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		b := &B2{AccountID: "1", ApplicationKey: "key"}
+		b, err := b.parseCreateB2Response(resp)
+		testErrorResponse(err, 400+i, t)
+		if b != nil {
+			t.Errorf("Expected b to be nil, instead got %+v", b)
+		}
 	}
 }
 
