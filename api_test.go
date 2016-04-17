@@ -2,7 +2,7 @@ package b2
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -54,9 +54,7 @@ func Test_createB2_HasAuth(t *testing.T) {
 func Test_parseCreateB2Response(t *testing.T) {
 	resp := &http.Response{
 		StatusCode: 200,
-		Body: nopCloser{
-			strings.NewReader(`{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)},
-	}
+		Body:       ioutil.NopCloser(strings.NewReader(`{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`))}
 
 	b := &B2{AccountID: "1", ApplicationKey: "key"}
 	b, err := b.parseCreateB2Response(resp)
@@ -242,9 +240,3 @@ func makeTestB2(c http.Client) *B2 {
 		client:             &client{Protocol: "http", Client: c},
 	}
 }
-
-type nopCloser struct {
-	io.Reader
-}
-
-func (nopCloser) Close() error { return nil }
