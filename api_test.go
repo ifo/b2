@@ -34,7 +34,7 @@ func Test_createB2_HasAuth(t *testing.T) {
 	}
 }
 
-func Test_parseCreateB2Response(t *testing.T) {
+func Test_B2_parseCreateB2Response(t *testing.T) {
 	// success
 	resp := createTestResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 
