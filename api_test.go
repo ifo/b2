@@ -213,6 +213,19 @@ func setupMockServer(code int, body string, headers map[string]string, reqChan c
 	return server, http.Client{Transport: tr}
 }
 
+func createTestResponse(statusCode int, body string) *http.Response {
+	return &http.Response{
+		StatusCode: statusCode,
+		Body:       ioutil.NopCloser(strings.NewReader(body))}
+}
+
+func createTestErrorResponses() []*http.Response {
+	return []*http.Response{
+		createTestResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`),
+		createTestResponse(401, `{"status":401,"code":"nope","message":"nope nope"}`),
+	}
+}
+
 // TODO replace with non-200 *http.Response creator
 func errorResponses() ([]int, []string) {
 	codes := []int{400, 401}
