@@ -109,9 +109,9 @@ func Test_B2_CreateRequest(t *testing.T) {
 
 func Test_replaceProtocol(t *testing.T) {
 	b2s := []B2{
-		B2{client: &client{Protocol: "https"}},
-		B2{client: &client{Protocol: "http"}},
-		B2{client: &client{Protocol: "kittens"}},
+		{client: &client{Protocol: "https"}},
+		{client: &client{Protocol: "http"}},
+		{client: &client{Protocol: "kittens"}},
 	}
 	urls := []string{
 		"http://localhost", "https://localhost", "http://localhost", "kittens://localhost",
@@ -149,9 +149,9 @@ func Test_replaceProtocol(t *testing.T) {
 
 func Test_GetBzInfoHeaders(t *testing.T) {
 	headers := map[string][]string{
-		"Content-Type":      []string{"kittens"},
-		"X-Bz-Info-kittens": []string{"yes"},
-		"X-Bz-Info-thing":   []string{"one"},
+		"Content-Type":      {"kittens"},
+		"X-Bz-Info-kittens": {"yes"},
+		"X-Bz-Info-thing":   {"one"},
 	}
 	resp := &http.Response{Header: headers}
 

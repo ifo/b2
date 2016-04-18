@@ -175,16 +175,16 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	fields := [][]byte{
 		[]byte("accountId"), []byte("bucketId"), []byte("bucketName"), []byte("bucketType")}
 	brs := []bucketRequest{
-		bucketRequest{},                                            // List Buckets
-		bucketRequest{BucketName: "bucket", BucketType: AllPublic}, // Create Bucket
-		bucketRequest{BucketID: "id", BucketType: AllPrivate},      // Bucket Update
-		bucketRequest{BucketID: "id"},                              // Bucket Delete
+		{}, // List Buckets
+		{BucketName: "bucket", BucketType: AllPublic}, // Create Bucket
+		{BucketID: "id", BucketType: AllPrivate},      // Bucket Update
+		{BucketID: "id"},                              // Bucket Delete
 	}
 	finds := [][][]byte{
-		[][]byte{fields[0]},                       // List Buckets
-		[][]byte{fields[0], fields[2], fields[3]}, // Create Bucket
-		[][]byte{fields[0], fields[1], fields[3]}, // Bucket Update
-		[][]byte{fields[0], fields[1]},            // Bucket Delete
+		{fields[0]},                       // List Buckets
+		{fields[0], fields[2], fields[3]}, // Create Bucket
+		{fields[0], fields[1], fields[3]}, // Bucket Update
+		{fields[0], fields[1]},            // Bucket Delete
 	}
 
 	// Setup all request bodies
