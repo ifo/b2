@@ -80,9 +80,7 @@ func Test_B2_CreateRequest(t *testing.T) {
 		"http://example.com", "kittens://example.com", "aoeu://example.com",
 		"invalid-url", "http://example.com",
 	}
-	reqBody := struct {
-		a int `json:"a"`
-	}{a: 1}
+	reqBody := struct{ a int }{a: 1}
 
 	for i := 0; i < 3; i++ {
 		req, err := b2.CreateRequest(methods[i], urls[i], reqBody)
