@@ -10,9 +10,11 @@ import (
 	"testing"
 )
 
+// TODO find a different way to test for auth
 func Test_createB2_HasAuth(t *testing.T) {
 	reqChan := make(chan *http.Request, 1)
-	s, c := setupMockJsonServer(200, "", reqChan)
+	headers := map[string]string{"Content-Type": "application/json"}
+	s, c := setupMockServer(200, "", headers, reqChan)
 	defer s.Close()
 
 	client := &client{Protocol: "http", Client: c}
@@ -171,13 +173,8 @@ func Test_GetBzInfoHeaders(t *testing.T) {
 
 // TODO remove
 func setupRequest(code int, body string) (*httptest.Server, http.Client) {
-	return setupMockJsonServer(code, body, nil)
-}
-
-// TODO remove
-func setupMockJsonServer(code int, body string, reqChan chan<- *http.Request) (*httptest.Server, http.Client) {
 	headers := map[string]string{"Content-Type": "application/json"}
-	return setupMockServer(code, body, headers, reqChan)
+	return setupMockServer(code, body, headers, nil)
 }
 
 // TODO remove
