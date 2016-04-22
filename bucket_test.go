@@ -8,13 +8,13 @@ import (
 	"net/http" // remove soon with refactor
 )
 
-func Test_B2_ListBuckets_Success(t *testing.T) {
-	s, c := setupRequest(200, `{"buckets":
+func Test_listBuckets(t *testing.T) {
+	// success
+	resp := createTestResponse(200, `{"buckets":
 [{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
-	defer s.Close()
 
-	b := makeTestB2(c)
-	buckets, err := b.ListBuckets()
+	b := &B2{}
+	buckets, err := b.listBuckets(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -34,22 +34,15 @@ func Test_B2_ListBuckets_Success(t *testing.T) {
 	if *buckets[0].B2 != *b {
 		t.Errorf("Expected bucket B2 to be *b, instead got %+v", *buckets[0].B2)
 	}
-}
 
-func Test_B2_ListBuckets_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		buckets, err := b.ListBuckets()
-		testErrorResponse(err, codes[i], t)
+	// errors
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		buckets, err := b.listBuckets(resp)
+		testErrorResponse(err, 400+i, t)
 		if buckets != nil {
-			t.Errorf("Expected buckets to be empty, instead got %+v", buckets)
+			t.Errorf("Expected b to be nil, instead got %+v", b)
 		}
-
-		s.Close()
 	}
 }
 
