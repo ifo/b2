@@ -37,7 +37,6 @@ func Test_createB2_HasAuth(t *testing.T) {
 }
 
 func Test_B2_parseCreateB2Response(t *testing.T) {
-	// success
 	resp := createTestResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 
 	b := &B2{AccountID: "1", ApplicationKey: "key"}
@@ -59,7 +58,6 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 		t.Errorf(`Expected DownloadUrl to be "/", instead got %s`, b.DownloadUrl)
 	}
 
-	// errors
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
 		b := &B2{AccountID: "1", ApplicationKey: "key"}
