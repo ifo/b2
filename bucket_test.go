@@ -114,30 +114,21 @@ func Test_Bucket_update(t *testing.T) {
 	}
 }
 
-func Test_Bucket_Delete_Success(t *testing.T) {
-	s, c := setupRequest(200,
+func Test_Bucket_bucketDelete(t *testing.T) {
+	resp := createTestResponse(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
-	defer s.Close()
 
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	err := bucket.Delete()
+	bucket := makeTestBucket(&B2{})
+	err := bucket.bucketDelete(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
-}
 
-func Test_Bucket_Delete_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		err := bucket.Update(AllPublic)
-		testErrorResponse(err, codes[i], t)
-
-		s.Close()
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		bucket := makeTestBucket(&B2{})
+		err := bucket.bucketDelete(resp)
+		testErrorResponse(err, 400+i, t)
 	}
 }
 
