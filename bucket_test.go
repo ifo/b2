@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"testing"
-
-	"net/http" // remove soon with refactor
 )
 
 func Test_listBuckets(t *testing.T) {
@@ -133,7 +131,7 @@ func Test_Bucket_bucketDelete(t *testing.T) {
 }
 
 func Test_B2_createBucketRequest(t *testing.T) {
-	b := makeTestB2(http.Client{})
+	b := &B2{ApiUrl: "http://example.com", client: &client{Protocol: "https"}}
 
 	reqs := [][]byte{}
 	fields := [][]byte{
