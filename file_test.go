@@ -10,74 +10,7 @@ import (
 	"time"
 )
 
-func Test_Bucket_ListFileNames_Success(t *testing.T) {
-	fileAction := []Action{ActionUpload, ActionUpload, ActionUpload}
-	setupFiles := ""
-	for i := range fileAction {
-		setupFiles += makeTestFileJson(i, fileAction[i], nil)
-		if i != len(fileAction)-1 {
-			setupFiles += ","
-		}
-	}
-	s, c := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileName":"name%d"}`, setupFiles, len(fileAction)))
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	response, err := bucket.ListFileNames("", 3)
-	if err != nil {
-		t.Fatalf("Expected no error, instead got %s", err)
-	}
-
-	if len(response.Files) != 3 {
-		t.Fatalf("Expected two files, instead got %d", len(response.Files))
-	}
-	if response.NextFileName != fmt.Sprintf("name%d", len(fileAction)) {
-		t.Errorf("Expected next file name to be name%d, instead got %s", len(fileAction), response.NextFileName)
-	}
-	if response.NextFileID != "" {
-		t.Errorf("Expected no next file id, instead got %s", response.NextFileID)
-	}
-	for i, file := range response.Files {
-		if file.Action != ActionUpload {
-			t.Errorf("Expected action to be upload, instead got %v", file.Action)
-		}
-		if file.ID != fmt.Sprintf("id%d", i) {
-			t.Errorf("Expected file ID to be id%d, instead got %s", i, fmt.Sprintf("id%d", i))
-		}
-		if file.Name != fmt.Sprintf("name%d", i) {
-			t.Errorf("Expected file name to be name%d, instead got %s", i, fmt.Sprintf("name%d", i))
-		}
-		if file.Size != int64(10+i) {
-			t.Errorf("Expected size to be %d, instead got %d", 10+i, file.Size)
-		}
-		if file.UploadTimestamp != int64(100+i) {
-			t.Errorf("Expected upload timestamp to be %d, instead got %d", 10+i, file.UploadTimestamp)
-		}
-		if file.Bucket != bucket {
-			t.Errorf("Expected file bucket to be bucket, instead got %+v", file.Bucket)
-		}
-	}
-}
-
-func Test_Bucket_ListFileNames_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		response, err := bucket.ListFileNames("", 0)
-		testErrorResponse(err, codes[i], t)
-		if response != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", response)
-		}
-
-		s.Close()
-	}
-}
-
-func Test_Bucket_ListFileVersions_Success(t *testing.T) {
+func Test_Bucket_parseListFile(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""
 	for i := range fileAction {
@@ -86,13 +19,11 @@ func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 			setupFiles += ","
 		}
 	}
-	s, c := setupRequest(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
+	resp := createTestResponse(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
 		setupFiles, len(fileAction), len(fileAction)))
-	defer s.Close()
 
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	response, err := bucket.ListFileVersions("", "", 3)
+	bucket := makeTestBucket(&B2{})
+	response, err := bucket.parseListFile(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -124,6 +55,15 @@ func Test_Bucket_ListFileVersions_Success(t *testing.T) {
 		}
 		if file.Bucket != bucket {
 			t.Errorf("Expected file bucket to be bucket, instead got %+v", file.Bucket)
+		}
+	}
+
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		response, err := bucket.parseListFile(resp)
+		testErrorResponse(err, 400+i, t)
+		if response != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", response)
 		}
 	}
 }
