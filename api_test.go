@@ -202,7 +202,8 @@ func setupMockServer(code int, body string, headers map[string]string, reqChan c
 func createTestResponse(statusCode int, body string) *http.Response {
 	return &http.Response{
 		StatusCode: statusCode,
-		Body:       ioutil.NopCloser(strings.NewReader(body))}
+		Body:       ioutil.NopCloser(strings.NewReader(body)),
+	}
 }
 
 func createTestErrorResponses() []*http.Response {

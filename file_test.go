@@ -170,152 +170,62 @@ func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
 	}
 }
 
-func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
-	headers := map[string]string{
-		"X-Bz-File-Id":      "1",
-		"X-Bz-File-Name":    "cats.txt",
-		"Content-Length":    "20",
-		"X-Bz-Content-Sha1": "74c3c58c1b6a2a4f63c187493388b421e732fc4b",
-		"Content-Type":      "text/plain",
-	}
-
-	fileData := "cats cats cats cats"
-	// a newline is added at the end of the bytes
-	fileDataBytes := append(bytes.NewBufferString(fileData).Bytes(), 10)
-
-	s, c := setupMockServer(200, fileData, headers, nil)
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	file, err := bucket.DownloadFileByName("cats.txt")
-	if err != nil {
-		t.Fatalf("Expected no error, instead got %s", err)
-	}
-
-	if file.Meta.ID != "1" {
-		t.Errorf(`Expected file.Meta.ID to be "1", instead got %s`, file.Meta.ID)
-	}
-	if file.Meta.Name != "cats.txt" {
-		t.Errorf(`Expected file.Meta.Name to be "cats.txt", instead got %s`, file.Meta.Name)
-	}
-	if file.Meta.Size != int64(len(file.Data)) {
-		t.Errorf("Expected file.Meta.Size to be 20, instead got %d", file.Meta.Size)
-	}
-	if file.Meta.ContentLength != 20 {
-		t.Errorf("Expected file.Meta.ContentLength to be 20, instead got %d", file.Meta.ContentLength)
-	}
-	if file.Meta.ContentSha1 != headers["X-Bz-Content-Sha1"] {
-		t.Errorf(`Expected file.Meta.Sha1 to be "%s", instead got %s`, headers["X-Bz-Content-Sha1"], file.Meta.ContentSha1)
-	}
-	if file.Meta.ContentType != "text/plain" {
-		t.Errorf(`Expected file.Meta.ContentType to be "text/plain", instead got %s`, file.Meta.ContentType)
-	}
-	// TODO include and test fileinfo
-	for k, v := range file.Meta.FileInfo {
-		t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
-	}
-	if !bytes.Equal(file.Data, fileDataBytes) {
-		t.Errorf(`Expected file.Data to be "%v", instead got %v`, fileDataBytes, file.Data)
-	}
-
-	if file.Meta.Bucket != bucket {
-		t.Errorf("Expected file.Meta.bucket to be bucket, instead got %+v", file.Meta.Bucket)
-	}
-}
-
-func Test_Bucket_DownloadFileByName_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		file, err := bucket.DownloadFileByName("cat.txt")
-		testErrorResponse(err, codes[i], t)
-		if file != nil {
-			t.Errorf("Expected file to be nil, instead got %+v", file)
-		}
-
-		s.Close()
-	}
-}
-
-func Test_Bucket_DownloadFileByID_Success(t *testing.T) {
-	headers := map[string]string{
-		"X-Bz-File-Id":      "1",
-		"X-Bz-File-Name":    "cats.txt",
-		"Content-Length":    "20",
-		"X-Bz-Content-Sha1": "74c3c58c1b6a2a4f63c187493388b421e732fc4b",
-		"Content-Type":      "text/plain",
-	}
-
-	fileData := "cats cats cats cats"
-	// a newline is added at the end of the bytes
-	fileDataBytes := append(bytes.NewBufferString(fileData).Bytes(), 10)
-
-	s, c := setupMockServer(200, fileData, headers, nil)
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	file, err := bucket.DownloadFileByID("1")
-	if err != nil {
-		t.Fatalf("Expected no error, instead got %s", err)
-	}
-
-	if file.Meta.ID != "1" {
-		t.Errorf(`Expected file.Meta.ID to be "1", instead got %s`, file.Meta.ID)
-	}
-	if file.Meta.Name != "cats.txt" {
-		t.Errorf(`Expected file.Meta.Name to be "cats.txt", instead got %s`, file.Meta.Name)
-	}
-	if file.Meta.Size != int64(len(file.Data)) {
-		t.Errorf("Expected file.Meta.Size to be 20, instead got %d", file.Meta.Size)
-	}
-	if file.Meta.ContentLength != 20 {
-		t.Errorf("Expected file.Meta.ContentLength to be 20, instead got %d", file.Meta.ContentLength)
-	}
-	if file.Meta.ContentSha1 != headers["X-Bz-Content-Sha1"] {
-		t.Errorf(`Expected file.Meta.Sha1 to be "%s", instead got %s`, headers["X-Bz-Content-Sha1"], file.Meta.ContentSha1)
-	}
-	if file.Meta.ContentType != "text/plain" {
-		t.Errorf(`Expected file.Meta.ContentType to be "text/plain", instead got %s`, file.Meta.ContentType)
-	}
-	// TODO include and test fileinfo
-	for k, v := range file.Meta.FileInfo {
-		t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
-	}
-	if !bytes.Equal(file.Data, fileDataBytes) {
-		t.Errorf(`Expected file.Data to be "%v", instead got %v`, fileDataBytes, file.Data)
-	}
-
-	if file.Meta.Bucket != bucket {
-		t.Errorf("Expected file.Meta.bucket to be bucket, instead got %+v", file.Meta.Bucket)
-	}
-}
-
-func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		file, err := bucket.DownloadFileByID("1")
-		testErrorResponse(err, codes[i], t)
-		if file != nil {
-			t.Errorf("Expected file to be nil, instead got %+v", file)
-		}
-
-		s.Close()
-	}
-}
-
 func Test_Bucket_parseFileResponse(t *testing.T) {
-	t.Skip()
+	headers := map[string][]string{
+		"X-Bz-File-Id":      []string{"1"},
+		"X-Bz-File-Name":    []string{"cats.txt"},
+		"Content-Length":    []string{"20"},
+		"X-Bz-Content-Sha1": []string{"78498e5096b20e3f1c063e8740ff83d595ededb3"},
+		"Content-Type":      []string{"text/plain"},
+	}
+	fileData := "cats cats cats cats"
+	resp := createTestResponse(200, fileData)
+	resp.Header = headers
+
+	bucket := makeTestBucket(&B2{})
+	file, err := bucket.parseFileResponse(resp)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+
+	if file.Meta.ID != "1" {
+		t.Errorf(`Expected file.Meta.ID to be "1", instead got %s`, file.Meta.ID)
+	}
+	if file.Meta.Name != "cats.txt" {
+		t.Errorf(`Expected file.Meta.Name to be "cats.txt", instead got %s`, file.Meta.Name)
+	}
+	if file.Meta.Size != int64(len(file.Data)) {
+		t.Errorf("Expected file.Meta.Size to be 20, instead got %d", file.Meta.Size)
+	}
+	if file.Meta.ContentLength != 20 {
+		t.Errorf("Expected file.Meta.ContentLength to be 20, instead got %d", file.Meta.ContentLength)
+	}
+	if file.Meta.ContentSha1 != headers["X-Bz-Content-Sha1"][0] {
+		t.Errorf(`Expected file.Meta.Sha1 to be "%s", instead got %s`, headers["X-Bz-Content-Sha1"], file.Meta.ContentSha1)
+	}
+	if file.Meta.ContentType != "text/plain" {
+		t.Errorf(`Expected file.Meta.ContentType to be "text/plain", instead got %s`, file.Meta.ContentType)
+	}
+	// TODO include and test fileinfo
+	for k, v := range file.Meta.FileInfo {
+		t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
+	}
+	if !bytes.Equal(file.Data, []byte(fileData)) {
+		t.Errorf(`Expected file.Data to be "%v", instead got %v`, []byte(fileData), file.Data)
+	}
+	if file.Meta.Bucket != bucket {
+		t.Errorf("Expected file.Meta.bucket to be bucket, instead got %+v", file.Meta.Bucket)
+	}
+
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		bucket := makeTestBucket(&B2{})
+		uploadUrl, err := bucket.parseFileResponse(resp)
+		testErrorResponse(err, 400+i, t)
+		if uploadUrl != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
+		}
+	}
 }
 
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
