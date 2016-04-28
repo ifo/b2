@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 )
@@ -68,35 +67,15 @@ func Test_Bucket_parseListFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_ListFileVersions_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		response, err := bucket.ListFileVersions("", "", 0)
-		testErrorResponse(err, codes[i], t)
-		if response != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", response)
-		}
-
-		s.Close()
-	}
-}
-
-func Test_Bucket_GetFileInfo_Success(t *testing.T) {
+func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
-		s, c := setupRequest(200, makeTestFileJson(i, fileAction[i], nil))
+		resp := createTestResponse(200, makeTestFileJson(i, fileAction[i], nil))
 
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
+		bucket := makeTestBucket(&B2{})
 
-		fileID := fmt.Sprintf("id%d", i)
-		fileMeta, err := bucket.GetFileInfo(fileID)
+		fileMeta, err := bucket.parseFileMetaResponse(resp)
 		if err != nil {
 			t.Fatalf("Expected no error, instead got %s", err)
 		}
@@ -125,101 +104,27 @@ func Test_Bucket_GetFileInfo_Success(t *testing.T) {
 		for k, v := range fileMeta.FileInfo {
 			t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
 		}
-
-		s.Close()
 	}
-}
 
-func Test_Bucket_GetFileInfo_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	var bucket *Bucket
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket = makeTestBucket(b)
-		response, err := bucket.GetFileInfo(fmt.Sprintf("id%d", i))
-		testErrorResponse(err, codes[i], t)
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		bucket := makeTestBucket(&B2{})
+		response, err := bucket.parseFileMetaResponse(resp)
+		testErrorResponse(err, 400+i, t)
 		if response != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", response)
 		}
-
-		s.Close()
 	}
+}
 
-	// test no provided ID error
+func Test_Bucket_GetFileInfo_NoFileID(t *testing.T) {
+	bucket := makeTestBucket(&B2{})
 	response, err := bucket.GetFileInfo("")
 	if err.Error() != "No fileID provided" {
 		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
 	}
 	if response != nil {
 		t.Errorf("Expected response to be empty, instead got %+v", response)
-	}
-}
-
-func Test_Bucket_UploadFile_Success(t *testing.T) {
-	fileInfo := map[string]string{"is_cats": "no :(", "should_be_cats": "of course"}
-	respHeaders := map[string]string{}
-	for k, v := range fileInfo {
-		respHeaders["X-Bz-Info-"+k] = v
-	}
-
-	s, c := setupMockServer(200, makeTestFileJson(0, ActionUpload, fileInfo), respHeaders, nil)
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	bucket.UploadUrls = append(bucket.UploadUrls, makeTestUploadUrl())
-	fileMeta, err := bucket.UploadFile("name0", strings.NewReader("length ten"), fileInfo)
-	if err != nil {
-		t.Fatalf("Expected no error, instead got %s", err)
-	}
-
-	if fileMeta.Action != ActionUpload {
-		t.Errorf("Expected action to be upload, instead got %v", fileMeta.Action)
-	}
-	if fileMeta.ID != "id0" {
-		t.Errorf("Expected file ID to be id0, instead got %s", fileMeta.ID)
-	}
-	if fileMeta.Name != "name0" {
-		t.Errorf("Expected file name to be name0, instead got %s", fileMeta.Name)
-	}
-	if fileMeta.ContentLength != 10 {
-		t.Errorf("Expected content length to be 10, instead got %d", fileMeta.ContentLength)
-	}
-	if fileMeta.ContentSha1 != "sha1" {
-		t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, fileMeta.ContentSha1)
-	}
-	if fileMeta.ContentType != "text" {
-		t.Errorf("Expected content type to be text/plain, instead got %s", fileMeta.ContentType)
-	}
-	if fileMeta.Bucket != bucket {
-		t.Errorf("Expected file bucket to be bucket, instead got %+v", fileMeta.Bucket)
-	}
-	for k, v := range fileMeta.FileInfo {
-		if val, ok := fileInfo[k]; !ok || val != v {
-			t.Errorf(`Expected fileMeta.FileInfo["%s"] to be "%s", instead got "%s"`, k, val, v)
-		}
-	}
-}
-
-func Test_Bucket_UploadFile_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		response, err := bucket.UploadFile("", strings.NewReader(""), nil)
-		testErrorResponse(err, codes[i], t)
-		if response != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", response)
-		}
-
-		s.Close()
 	}
 }
 
@@ -429,120 +334,6 @@ func Test_Bucket_DownloadFileByID_Errors(t *testing.T) {
 }
 
 func Test_Bucket_parseFileResponse(t *testing.T) {
-	t.Skip()
-}
-
-func Test_Bucket_HideFile_Success(t *testing.T) {
-	unixTime := time.Now().Unix()
-	s, c := setupRequest(200, fmt.Sprintf(`{
-"fileId":"1",
-"fileName":"cats.txt",
-"contentType":null,
-"contentSha1":null,
-"fileInfo":{},
-"action":"hide",
-"size":0,
-"uploadTimestamp":%d
-}`, unixTime))
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	fileMeta, err := bucket.HideFile("cats.txt")
-	if err != nil {
-		t.Fatalf("Expected err to be nil, instead got %+v", err)
-	}
-
-	if fileMeta.ID != "1" {
-		t.Errorf(`Expected fileMeta.ID to be "1", instead got %s`, fileMeta.ID)
-	}
-	if fileMeta.Name != "cats.txt" {
-		t.Errorf(`Expected fileMeta.Name to be "cats.txt", instead got %s`, fileMeta.Name)
-	}
-	if fileMeta.ContentType != "" {
-		t.Errorf(`Expected fileMeta.ContentType to be "", instead got %s`, fileMeta.ContentType)
-	}
-	if fileMeta.ContentSha1 != "" {
-		t.Errorf(`Expected fileMeta.ContentSha1 to be "", instead got %s`, fileMeta.ContentSha1)
-	}
-	if fileMeta.Action != "hide" {
-		t.Errorf(`Expected fileMeta.Action to be "hide", instead got %s`, fileMeta.Action)
-	}
-	if fileMeta.Size != 0 {
-		t.Errorf(`Expected fileMeta.Size to be 0, instead got %d`, fileMeta.Size)
-	}
-	if fileMeta.UploadTimestamp != unixTime {
-		t.Errorf(`Expected fileMeta.UploadTimestamp to be unixTime, instead got %v`, fileMeta.UploadTimestamp)
-	}
-	for k, v := range fileMeta.FileInfo {
-		t.Errorf("Expected fileMeta.FileInfo to be empty, instead got %s: %s", k, v)
-	}
-
-	if fileMeta.Bucket != bucket {
-		t.Errorf("Expected fileMeta.Bucket to be bucket, instead got %+v", fileMeta.Bucket)
-	}
-}
-
-func Test_Bucket_HideFile_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		fileMeta, err := bucket.HideFile("cats.txt")
-		testErrorResponse(err, codes[i], t)
-		if fileMeta != nil {
-			t.Errorf("Expected fileMeta to be nil, instead got %+v", fileMeta)
-		}
-
-		s.Close()
-	}
-}
-
-func Test_Bucket_DeleteFileVersion_Success(t *testing.T) {
-	s, c := setupRequest(200, `{"fileId":"1","fileName":"cats.txt"}`)
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	fileMeta, err := bucket.DeleteFileVersion("cats.txt", "1")
-	if err != nil {
-		t.Fatalf("Expected err to be nil, instead got %+v", err)
-	}
-
-	if fileMeta.ID != "1" {
-		t.Errorf(`Expected fileMeta.ID to be "1", instead got %s`, fileMeta.ID)
-	}
-	if fileMeta.Name != "cats.txt" {
-		t.Errorf(`Expected fileMeta.Name to be "cats.txt", instead got %s`, fileMeta.Name)
-	}
-
-	if fileMeta.Bucket != bucket {
-		t.Errorf("Expected fileMeta.Bucket to be bucket, instead got %+v", fileMeta.Bucket)
-	}
-}
-
-func Test_Bucket_DeleteFileVersion_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		fileMeta, err := bucket.DeleteFileVersion("cats.txt", "1")
-		testErrorResponse(err, codes[i], t)
-		if fileMeta != nil {
-			t.Errorf("Expected fileMeta to be nil, instead got %+v", fileMeta)
-		}
-
-		s.Close()
-	}
-}
-
-func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	t.Skip()
 }
 
