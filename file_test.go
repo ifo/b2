@@ -129,7 +129,39 @@ func Test_Bucket_GetFileInfo_NoFileID(t *testing.T) {
 }
 
 func Test_Bucket_setupUploadFile(t *testing.T) {
-	t.Skip()
+	fileName := "cats.txt"
+	fileData := bytes.NewReader([]byte("cats cats cats cats"))
+	fileInfo := map[string]string{
+		"file-cats": "yes",
+		"file-dogs": "no",
+	}
+
+	fileInfoCheck := map[string]string{
+		"Authorization":       "token2",
+		"X-Bz-File-Name":      "cats.txt",
+		"Content-Type":        "b2/x-auto",
+		"Content-Length":      "19",
+		"X-Bz-Content-Sha1":   "78498e5096b20e3f1c063e8740ff83d595ededb3",
+		"X-Bz-Info-file-cats": fileInfo["file-cats"],
+		"X-Bz-Info-file-dogs": fileInfo["file-dogs"],
+	}
+
+	uploadUrls := []*UploadUrl{
+		&UploadUrl{Url: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
+		&UploadUrl{Url: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
+	}
+	bucket := makeTestBucket(&B2{client: &client{Protocol: "https"}})
+	bucket.UploadUrls = uploadUrls
+	req, err := bucket.setupUploadFile(fileName, fileData, fileInfo)
+	if err != nil {
+		t.Fatalf("Expected no error, instead got %s", err)
+	}
+
+	for k, v := range fileInfoCheck {
+		if req.Header.Get(k) != v {
+			t.Errorf("Expected req header %s to be %s, instead got %s", k, v, req.Header.Get(k))
+		}
+	}
 }
 
 func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
