@@ -206,7 +206,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 	headers := map[string][]string{
 		"X-Bz-File-Id":      []string{"1"},
 		"X-Bz-File-Name":    []string{"cats.txt"},
-		"Content-Length":    []string{"20"},
+		"Content-Length":    []string{"19"},
 		"X-Bz-Content-Sha1": []string{"78498e5096b20e3f1c063e8740ff83d595ededb3"},
 		"Content-Type":      []string{"text/plain"},
 	}
@@ -227,10 +227,10 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 		t.Errorf(`Expected file.Meta.Name to be "cats.txt", instead got %s`, file.Meta.Name)
 	}
 	if file.Meta.Size != int64(len(file.Data)) {
-		t.Errorf("Expected file.Meta.Size to be 20, instead got %d", file.Meta.Size)
+		t.Errorf("Expected file.Meta.Size to be 19, instead got %d", file.Meta.Size)
 	}
-	if file.Meta.ContentLength != 20 {
-		t.Errorf("Expected file.Meta.ContentLength to be 20, instead got %d", file.Meta.ContentLength)
+	if file.Meta.ContentLength != 19 {
+		t.Errorf("Expected file.Meta.ContentLength to be 19, instead got %d", file.Meta.ContentLength)
 	}
 	if file.Meta.ContentSha1 != headers["X-Bz-Content-Sha1"][0] {
 		t.Errorf(`Expected file.Meta.Sha1 to be "%s", instead got %s`, headers["X-Bz-Content-Sha1"], file.Meta.ContentSha1)

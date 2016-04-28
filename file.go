@@ -163,6 +163,7 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 		return nil, err
 	}
 
+	// TODO percent-encode header values
 	req.Header.Set("Authorization", uploadUrl.AuthorizationToken)
 	req.Header.Set("X-Bz-File-Name", name)
 	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
@@ -172,6 +173,7 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 		req.Header.Set("X-Bz-Info-"+k, v)
 	}
 	// TODO include X-Bz-Info-src_last_modified_millis
+	// TODO check for total headers being greater than 7,000 bytes
 
 	return req, nil
 }
