@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 )
@@ -261,8 +260,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 }
 
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
-	b := makeTestB2(http.Client{})
-	bucket := makeTestBucket(b)
+	bucket := makeTestBucket(&B2{})
 
 	times := []time.Time{
 		time.Now().UTC(),

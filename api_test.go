@@ -4,37 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 )
 
 // TODO find a different way to test for auth
-func Test_createB2_HasAuth(t *testing.T) {
-	reqChan := make(chan *http.Request, 1)
-	headers := map[string]string{"Content-Type": "application/json"}
-	s, c := setupMockServer(200, "", headers, reqChan)
-	defer s.Close()
-
-	client := &client{Protocol: "http", Client: c}
-
-	createB2("1", "1", client)
-
-	// get the request that the mock server received
-	req := <-reqChan
-
-	username, password, ok := req.BasicAuth()
-	if !ok {
-		t.Fatal("Expected ok to be true, instead got false")
-	}
-	if username != "1" {
-		t.Errorf(`Expected username to be "1", instead got %s`, username)
-	}
-	if password != "1" {
-		t.Errorf(`Expected password to be "1", instead got %s`, password)
-	}
-}
 
 func Test_B2_parseCreateB2Response(t *testing.T) {
 	resp := createTestResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
@@ -169,36 +143,6 @@ func Test_GetBzInfoHeaders(t *testing.T) {
 	}
 }
 
-// TODO remove
-func setupRequest(code int, body string) (*httptest.Server, http.Client) {
-	headers := map[string]string{"Content-Type": "application/json"}
-	return setupMockServer(code, body, headers, nil)
-}
-
-// TODO remove
-func setupMockServer(code int, body string, headers map[string]string, reqChan chan<- *http.Request) (*httptest.Server, http.Client) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if reqChan != nil {
-			reqChan <- r
-		}
-
-		for k, v := range headers {
-			w.Header().Set(k, v)
-		}
-
-		w.WriteHeader(code)
-		fmt.Fprintln(w, body)
-	}))
-
-	tr := &http.Transport{
-		Proxy: func(req *http.Request) (*url.URL, error) {
-			return url.Parse(server.URL)
-		},
-	}
-
-	return server, http.Client{Transport: tr}
-}
-
 func createTestResponse(statusCode int, body string) *http.Response {
 	return &http.Response{
 		StatusCode: statusCode,
@@ -213,30 +157,10 @@ func createTestErrorResponses() []*http.Response {
 	}
 }
 
-// TODO replace with non-200 *http.Response creator
-func errorResponses() ([]int, []string) {
-	codes := []int{400, 401}
-	bodies := []string{
-		`{"status":400,"code":"nope","message":"nope nope"}`,
-		`{"status":401,"code":"nope","message":"nope nope"}`,
-	}
-	return codes, bodies
-}
-
 func testErrorResponse(err error, code int, t *testing.T) {
 	if err == nil {
 		t.Error("Expected error, no error received")
 	} else if err.Error() != fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {
 		t.Errorf(`Expected "Status: %d, Code: nope, Message: nope nope", instead got %s`, code, err)
-	}
-}
-
-func makeTestB2(c http.Client) *B2 {
-	return &B2{
-		AccountID:          "id",
-		AuthorizationToken: "token",
-		ApiUrl:             "https://api900.backblaze.com",
-		DownloadUrl:        "https://f900.backblaze.com",
-		client:             &client{Protocol: "http", Client: c},
 	}
 }
