@@ -22,21 +22,21 @@ func Test_Bucket_parseListFile(t *testing.T) {
 		setupFiles, len(fileAction), len(fileAction)))
 
 	bucket := makeTestBucket(&B2{})
-	response, err := bucket.parseListFile(resp)
+	fileList, err := bucket.parseListFile(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	if len(response.Files) != 3 {
-		t.Fatalf("Expected three files, instead got %d", len(response.Files))
+	if len(fileList.Files) != 3 {
+		t.Fatalf("Expected three files, instead got %d", len(fileList.Files))
 	}
-	if response.NextFileName != "name3" {
-		t.Errorf("Expected next file name to be name3, instead got %s", response.NextFileName)
+	if fileList.NextFileName != "name3" {
+		t.Errorf("Expected next file name to be name3, instead got %s", fileList.NextFileName)
 	}
-	if response.NextFileID != "id3" {
-		t.Errorf("Expected next file id to be id3, instead got %s", response.NextFileID)
+	if fileList.NextFileID != "id3" {
+		t.Errorf("Expected next file id to be id3, instead got %s", fileList.NextFileID)
 	}
-	for i, file := range response.Files {
+	for i, file := range fileList.Files {
 		if file.Action != fileAction[i] {
 			t.Errorf("Expected action to be %v, instead got %v", fileAction[i], file.Action)
 		}
@@ -59,10 +59,10 @@ func Test_Bucket_parseListFile(t *testing.T) {
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		response, err := bucket.parseListFile(resp)
+		fileList, err := bucket.parseListFile(resp)
 		testErrorResponse(err, 400+i, t)
-		if response != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", response)
+		if fileList != nil {
+			t.Errorf("Expected fileList to be empty, instead got %+v", fileList)
 		}
 	}
 }
@@ -109,22 +109,22 @@ func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
 		bucket := makeTestBucket(&B2{})
-		response, err := bucket.parseFileMetaResponse(resp)
+		fileMeta, err := bucket.parseFileMetaResponse(resp)
 		testErrorResponse(err, 400+i, t)
-		if response != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", response)
+		if fileMeta != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", fileMeta)
 		}
 	}
 }
 
 func Test_Bucket_GetFileInfo_NoFileID(t *testing.T) {
 	bucket := makeTestBucket(&B2{})
-	response, err := bucket.GetFileInfo("")
+	fileInfo, err := bucket.GetFileInfo("")
 	if err.Error() != "No fileID provided" {
 		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
 	}
-	if response != nil {
-		t.Errorf("Expected response to be empty, instead got %+v", response)
+	if fileInfo != nil {
+		t.Errorf("Expected fileInfo to be empty, instead got %+v", fileInfo)
 	}
 }
 
@@ -132,61 +132,42 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 	t.Skip()
 }
 
-func Test_Bucket_GetUploadUrl_Success(t *testing.T) {
+func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
+	uploadUrlStr := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
+	resp := createTestResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrlStr))
 
-	uploadUrl := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
-
-	s, c := setupRequest(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrl))
-	defer s.Close()
-
-	b := makeTestB2(c)
-	bucket := makeTestBucket(b)
-	response, err := bucket.GetUploadUrl()
+	bucket := makeTestBucket(&B2{})
+	uploadUrl, err := bucket.parseGetUploadUrlResponse(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	if response.Expiration.IsZero() {
+	if uploadUrl.Expiration.IsZero() {
 		t.Error("Expected time to be now + 24h, instead got zero time")
 	}
-	if response.AuthorizationToken != "token" {
-		t.Errorf(`Expected response token to be "token", instead got %s`, response.AuthorizationToken)
+	if uploadUrl.AuthorizationToken != "token" {
+		t.Errorf(`Expected uploadUrl token to be "token", instead got %s`, uploadUrl.AuthorizationToken)
 	}
-	if response.Url != uploadUrl {
-		t.Errorf("Expected response url to be uploadUrl, instead got %s", response.Url)
+	if uploadUrl.Url != uploadUrlStr {
+		t.Errorf("Expected uploadUrl's url to be uploadUrlStr, instead got %s", uploadUrl.Url)
 	}
 
 	if len(bucket.UploadUrls) != 1 {
 		t.Fatalf("Expected length of bucket upload urls to be 1, insetad was %d", len(bucket.UploadUrls))
 	}
-	if bucket.UploadUrls[0] != response {
-		t.Error("Expected bucket's uploadUrls to be response, instead was", bucket.UploadUrls[0])
+	if bucket.UploadUrls[0] != uploadUrl {
+		t.Error("Expected bucket's first uploadUrl to be uploadUrl, instead was", bucket.UploadUrls[0])
 	}
-}
 
-func Test_Bucket_GetUploadUrl_Errors(t *testing.T) {
-	codes, bodies := errorResponses()
-
-	for i := range codes {
-		s, c := setupRequest(codes[i], bodies[i])
-
-		b := makeTestB2(c)
-		bucket := makeTestBucket(b)
-		response, err := bucket.GetUploadUrl()
-		testErrorResponse(err, codes[i], t)
-		if response != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", response)
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		bucket := makeTestBucket(&B2{})
+		uploadUrl, err := bucket.parseGetUploadUrlResponse(resp)
+		testErrorResponse(err, 400+i, t)
+		if uploadUrl != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
 		}
-		if len(bucket.UploadUrls) != 0 {
-			t.Errorf("Expected no upload urls, instead got %+v", bucket.UploadUrls)
-		}
-
-		s.Close()
 	}
-}
-
-func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
-	t.Skip()
 }
 
 func Test_Bucket_DownloadFileByName_Success(t *testing.T) {
