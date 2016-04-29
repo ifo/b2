@@ -9,9 +9,8 @@ import (
 func Test_listBuckets(t *testing.T) {
 	resp := createTestResponse(200, `{"buckets":
 [{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
-
-	b := &B2{}
-	buckets, err := b.listBuckets(resp)
+	b2 := &B2{}
+	buckets, err := b2.listBuckets(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -28,16 +27,16 @@ func Test_listBuckets(t *testing.T) {
 	if buckets[0].BucketType != AllPrivate {
 		t.Errorf("Expected AllPrivate, instead got %+v", buckets[0].BucketType)
 	}
-	if *buckets[0].B2 != *b {
-		t.Errorf("Expected bucket B2 to be *b, instead got %+v", *buckets[0].B2)
+	if *buckets[0].B2 != *b2 {
+		t.Errorf("Expected bucket B2 to be *b2, instead got %+v", *buckets[0].B2)
 	}
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		buckets, err := b.listBuckets(resp)
+		buckets, err := b2.listBuckets(resp)
 		testErrorResponse(err, 400+i, t)
 		if buckets != nil {
-			t.Errorf("Expected b to be nil, instead got %+v", b)
+			t.Errorf("Expected b2 to be nil, instead got %+v", b2)
 		}
 	}
 }
@@ -45,12 +44,12 @@ func Test_listBuckets(t *testing.T) {
 func Test_B2_createBucket(t *testing.T) {
 	resp := createTestResponse(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPrivate"}`)
-
-	b := &B2{}
-	bucket, err := b.createBucket(resp)
+	b2 := &B2{}
+	bucket, err := b2.createBucket(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
+
 	if bucket.BucketID != "id" {
 		t.Errorf(`Expected "id", instead got %s`, bucket.BucketID)
 	}
@@ -60,16 +59,16 @@ func Test_B2_createBucket(t *testing.T) {
 	if bucket.BucketType != AllPrivate {
 		t.Errorf("Expected bucket type to be private, instead got %s", bucket.BucketType)
 	}
-	if bucket.B2 != b {
+	if bucket.B2 != b2 {
 		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
 	}
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		buckets, err := b.listBuckets(resp)
+		buckets, err := b2.listBuckets(resp)
 		testErrorResponse(err, 400+i, t)
 		if buckets != nil {
-			t.Errorf("Expected b to be nil, instead got %+v", b)
+			t.Errorf("Expected b2 to be nil, instead got %+v", b2)
 		}
 	}
 }
@@ -77,9 +76,8 @@ func Test_B2_createBucket(t *testing.T) {
 func Test_Bucket_update(t *testing.T) {
 	resp := createTestResponse(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
-
-	b := &B2{}
-	bucket := makeTestBucket(b)
+	b2 := &B2{}
+	bucket := makeTestBucket(b2)
 	err := bucket.update(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -97,13 +95,13 @@ func Test_Bucket_update(t *testing.T) {
 	if bucket.BucketName != "bucket" {
 		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
 	}
-	if bucket.B2 != b {
+	if bucket.B2 != b2 {
 		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
 	}
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		bucket := makeTestBucket(b)
+		bucket := makeTestBucket(b2)
 		err := bucket.update(resp)
 		testErrorResponse(err, 400+i, t)
 		if bucket.BucketType != AllPrivate {
@@ -131,7 +129,7 @@ func Test_Bucket_bucketDelete(t *testing.T) {
 }
 
 func Test_B2_createBucketRequest(t *testing.T) {
-	b := &B2{ApiUrl: "http://example.com"}
+	b2 := &B2{ApiUrl: "http://example.com"}
 	reqs := [][]byte{}
 	fields := [][]byte{
 		[]byte("accountId"), []byte("bucketId"), []byte("bucketName"), []byte("bucketType")}
@@ -149,7 +147,7 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	}
 
 	// Setup all request bodies
-	req1, err := b.createBucketRequest("/", brs[0])
+	req1, err := b2.createBucketRequest("/", brs[0])
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -159,7 +157,7 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	}
 	reqs = append(reqs, body1)
 
-	req2, err := b.createBucketRequest("/", brs[1])
+	req2, err := b2.createBucketRequest("/", brs[1])
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -169,7 +167,7 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	}
 	reqs = append(reqs, body2)
 
-	req3, err := b.createBucketRequest("/", brs[2])
+	req3, err := b2.createBucketRequest("/", brs[2])
 	if err != nil {
 		t.Errorf("Expected no error, instead got %s", err)
 	}
@@ -179,7 +177,7 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	}
 	reqs = append(reqs, body3)
 
-	req4, err := b.createBucketRequest("/", brs[3])
+	req4, err := b2.createBucketRequest("/", brs[3])
 	if err != nil {
 		t.Errorf("Expected no error, instead got %s", err)
 	}
@@ -203,12 +201,12 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	}
 }
 
-func makeTestBucket(b *B2) *Bucket {
+func makeTestBucket(b2 *B2) *Bucket {
 	return &Bucket{
 		BucketID:   "id",
 		BucketName: "bucket",
 		BucketType: AllPrivate,
-		B2:         b,
+		B2:         b2,
 	}
 }
 

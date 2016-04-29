@@ -35,12 +35,12 @@ func (e ErrorResponse) Error() string {
 }
 
 func CreateB2(accountId, appKey string) (*B2, error) {
-	b := &B2{
+	b2 := &B2{
 		AccountID:      accountId,
 		ApplicationKey: appKey,
 	}
 
-	req, err := b.CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
+	req, err := b2.CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -50,24 +50,24 @@ func CreateB2(accountId, appKey string) (*B2, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseCreateB2Response(resp)
+	return b2.parseCreateB2Response(resp)
 }
 
-func (b *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
+func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
 	authResp := &authResponse{}
 	err := ParseResponse(resp, authResp)
 	if err != nil {
 		return nil, err
 	}
 
-	b.AuthorizationToken = authResp.AuthorizationToken
-	b.ApiUrl = authResp.ApiUrl
-	b.DownloadUrl = authResp.DownloadUrl
+	b2.AuthorizationToken = authResp.AuthorizationToken
+	b2.ApiUrl = authResp.ApiUrl
+	b2.DownloadUrl = authResp.DownloadUrl
 
-	return b, nil
+	return b2, nil
 }
 
-func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Request, error) {
+func (b2 *B2) CreateRequest(method, url string, request interface{}) (*http.Request, error) {
 	reqBody, err := json.Marshal(request)
 	if err != nil {
 		return nil, err

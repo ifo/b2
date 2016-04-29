@@ -38,8 +38,8 @@ type bucketRequest struct {
 	BucketType BucketType `json:"bucketType,omitempty"`
 }
 
-func (b *B2) ListBuckets() ([]Bucket, error) {
-	req, err := b.createBucketRequest("/b2api/v1/b2_list_buckets", bucketRequest{})
+func (b2 *B2) ListBuckets() ([]Bucket, error) {
+	req, err := b2.createBucketRequest("/b2api/v1/b2_list_buckets", bucketRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +48,10 @@ func (b *B2) ListBuckets() ([]Bucket, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.listBuckets(resp)
+	return b2.listBuckets(resp)
 }
 
-func (b *B2) listBuckets(resp *http.Response) ([]Bucket, error) {
+func (b2 *B2) listBuckets(resp *http.Response) ([]Bucket, error) {
 	respBody := &listBucketsResponse{}
 	err := ParseResponse(resp, respBody)
 	if err != nil {
@@ -59,14 +59,14 @@ func (b *B2) listBuckets(resp *http.Response) ([]Bucket, error) {
 	}
 
 	for i := range respBody.Buckets {
-		respBody.Buckets[i].B2 = b
+		respBody.Buckets[i].B2 = b2
 	}
 	return respBody.Buckets, nil
 }
 
-func (b *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
-	br := bucketRequest{BucketName: name, BucketType: bucketType}
-	req, err := b.createBucketRequest("/b2api/v1/b2_list_buckets", br)
+func (b2 *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
+	bucketReq := bucketRequest{BucketName: name, BucketType: bucketType}
+	req, err := b2.createBucketRequest("/b2api/v1/b2_list_buckets", bucketReq)
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +75,11 @@ func (b *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.createBucket(resp)
+	return b2.createBucket(resp)
 }
 
-func (b *B2) createBucket(resp *http.Response) (*Bucket, error) {
-	bucket := &Bucket{B2: b}
+func (b2 *B2) createBucket(resp *http.Response) (*Bucket, error) {
+	bucket := &Bucket{B2: b2}
 	err := ParseResponse(resp, bucket)
 	if err != nil {
 		return nil, err
@@ -123,12 +123,12 @@ func (b *Bucket) bucketDelete(resp *http.Response) error {
 	return ParseResponse(resp, b)
 }
 
-func (b *B2) createBucketRequest(path string, br bucketRequest) (*http.Request, error) {
-	br.AccountID = b.AccountID
-	req, err := b.CreateRequest("POST", b.ApiUrl+path, br)
+func (b2 *B2) createBucketRequest(path string, br bucketRequest) (*http.Request, error) {
+	br.AccountID = b2.AccountID
+	req, err := b2.CreateRequest("POST", b2.ApiUrl+path, br)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", b.AuthorizationToken)
+	req.Header.Set("Authorization", b2.AuthorizationToken)
 	return req, nil
 }
