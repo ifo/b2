@@ -30,14 +30,13 @@ type authResponse struct {
 	DownloadUrl        string `json:"downloadUrl"`
 }
 
-// TODO make error public, add checking for error type
-type errorResponse struct {
+type ErrorResponse struct {
 	Status  int64  `json:"status"`
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e errorResponse) Error() string {
+func (e ErrorResponse) Error() string {
 	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
 }
 
@@ -129,7 +128,7 @@ func ParseResponseBody(resp *http.Response, respBody interface{}) error {
 }
 
 func ParseErrorResponse(resp *http.Response) error {
-	errResp := &errorResponse{}
+	errResp := &ErrorResponse{}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
