@@ -146,8 +146,8 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 	}
 
 	uploadUrls := []*UploadUrl{
-		&UploadUrl{Url: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
-		&UploadUrl{Url: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
+		{Url: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
+		{Url: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
 	}
 	bucket := makeTestBucket(&B2{})
 	bucket.UploadUrls = uploadUrls
@@ -203,11 +203,11 @@ func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
 
 func Test_Bucket_parseFileResponse(t *testing.T) {
 	headers := map[string][]string{
-		"X-Bz-File-Id":      []string{"1"},
-		"X-Bz-File-Name":    []string{"cats.txt"},
-		"Content-Length":    []string{"19"},
-		"X-Bz-Content-Sha1": []string{"78498e5096b20e3f1c063e8740ff83d595ededb3"},
-		"Content-Type":      []string{"text/plain"},
+		"X-Bz-File-Id":      {"1"},
+		"X-Bz-File-Name":    {"cats.txt"},
+		"Content-Length":    {"19"},
+		"X-Bz-Content-Sha1": {"78498e5096b20e3f1c063e8740ff83d595ededb3"},
+		"Content-Type":      {"text/plain"},
 	}
 	fileData := "cats cats cats cats"
 	resp := createTestResponse(200, fileData)
