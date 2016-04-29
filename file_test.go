@@ -12,7 +12,7 @@ func Test_Bucket_parseListFile(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""
 	for i := range fileAction {
-		setupFiles += makeTestFileJson(i, fileAction[i], nil)
+		setupFiles += createTestFileJson(i, fileAction[i], nil)
 		if i != len(fileAction)-1 {
 			setupFiles += ","
 		}
@@ -20,7 +20,7 @@ func Test_Bucket_parseListFile(t *testing.T) {
 	resp := createTestResponse(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
 		setupFiles, len(fileAction), len(fileAction)))
 
-	bucket := makeTestBucket(&B2{})
+	bucket := createTestBucket()
 	fileList, err := bucket.parseListFile(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -70,9 +70,9 @@ func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
-		resp := createTestResponse(200, makeTestFileJson(i, fileAction[i], nil))
+		resp := createTestResponse(200, createTestFileJson(i, fileAction[i], nil))
 
-		bucket := makeTestBucket(&B2{})
+		bucket := createTestBucket()
 
 		fileMeta, err := bucket.parseFileMetaResponse(resp)
 		if err != nil {
@@ -107,7 +107,7 @@ func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		bucket := makeTestBucket(&B2{})
+		bucket := createTestBucket()
 		fileMeta, err := bucket.parseFileMetaResponse(resp)
 		testErrorResponse(err, 400+i, t)
 		if fileMeta != nil {
@@ -117,7 +117,7 @@ func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 }
 
 func Test_Bucket_GetFileInfo_NoFileID(t *testing.T) {
-	bucket := makeTestBucket(&B2{})
+	bucket := createTestBucket()
 	fileInfo, err := bucket.GetFileInfo("")
 	if err.Error() != "No fileID provided" {
 		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
@@ -149,7 +149,7 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 		{Url: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
 		{Url: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
 	}
-	bucket := makeTestBucket(&B2{})
+	bucket := createTestBucket()
 	bucket.UploadUrls = uploadUrls
 	req, err := bucket.setupUploadFile(fileName, fileData, fileInfo)
 	if err != nil {
@@ -167,7 +167,7 @@ func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
 	uploadUrlStr := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
 	resp := createTestResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrlStr))
 
-	bucket := makeTestBucket(&B2{})
+	bucket := createTestBucket()
 	uploadUrl, err := bucket.parseGetUploadUrlResponse(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -192,7 +192,7 @@ func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		bucket := makeTestBucket(&B2{})
+		bucket := createTestBucket()
 		uploadUrl, err := bucket.parseGetUploadUrlResponse(resp)
 		testErrorResponse(err, 400+i, t)
 		if uploadUrl != nil {
@@ -213,7 +213,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 	resp := createTestResponse(200, fileData)
 	resp.Header = headers
 
-	bucket := makeTestBucket(&B2{})
+	bucket := createTestBucket()
 	file, err := bucket.parseFileResponse(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -250,7 +250,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
-		bucket := makeTestBucket(&B2{})
+		bucket := createTestBucket()
 		uploadUrl, err := bucket.parseFileResponse(resp)
 		testErrorResponse(err, 400+i, t)
 		if uploadUrl != nil {
@@ -260,7 +260,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 }
 
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
-	bucket := makeTestBucket(&B2{})
+	bucket := createTestBucket()
 
 	times := []time.Time{
 		time.Now().UTC(),
@@ -287,7 +287,7 @@ func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	}
 }
 
-func makeTestFileJson(num int, action Action, fileInfo map[string]string) string {
+func createTestFileJson(num int, action Action, fileInfo map[string]string) string {
 	file := FileMeta{
 		ID:              fmt.Sprintf("id%d", num),
 		Name:            fmt.Sprintf("name%d", num),
@@ -303,7 +303,7 @@ func makeTestFileJson(num int, action Action, fileInfo map[string]string) string
 	return string(fileJson)
 }
 
-func makeTestUploadUrl() *UploadUrl {
+func createTestUploadUrl() *UploadUrl {
 	return &UploadUrl{
 		Url:                "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id",
 		AuthorizationToken: "token",
