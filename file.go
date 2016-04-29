@@ -60,7 +60,7 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 		StartFileName: startFileName,
 		MaxFileCount:  maxFileCount,
 	}
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
+	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 		StartFileID:   startFileID,
 		MaxFileCount:  maxFileCount,
 	}
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
+	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 		return nil, fmt.Errorf("No fileID provided")
 	}
 	requestBody := fileMetaRequest{FileID: fileID}
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_file_info", requestBody)
+	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_file_info", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 		}
 	}
 
-	req, err := b.B2.CreateRequest("POST", uploadUrl.Url, file)
+	req, err := CreateRequest("POST", uploadUrl.Url, file)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 
 func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 	requestBody := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_upload_url", requestBody)
+	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_upload_url", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (b *Bucket) parseGetUploadUrlResponse(resp *http.Response) (*UploadUrl, err
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
-	req, err := b.B2.CreateRequest("GET", b.B2.DownloadUrl+"/file/"+fileName, nil)
+	req, err := CreateRequest("GET", b.B2.DownloadUrl+"/file/"+fileName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	req, err := b.B2.CreateRequest("GET", b.B2.DownloadUrl+"/b2api/v1/b2_download_file_by_id?fileId="+fileID, nil)
+	req, err := CreateRequest("GET", b.B2.DownloadUrl+"/b2api/v1/b2_download_file_by_id?fileId="+fileID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,7 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 		BucketID: b.BucketID,
 		FileName: fileName,
 	}
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_hide_file", requestBody)
+	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_hide_file", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 		FileName: fileName,
 		FileID:   fileID,
 	}
-	req, err := b.B2.CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_delete_file_version", requestBody)
+	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_delete_file_version", requestBody)
 	if err != nil {
 		return nil, err
 	}

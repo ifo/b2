@@ -35,12 +35,7 @@ func (e ErrorResponse) Error() string {
 }
 
 func CreateB2(accountId, appKey string) (*B2, error) {
-	b2 := &B2{
-		AccountID:      accountId,
-		ApplicationKey: appKey,
-	}
-
-	req, err := b2.CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
+	req, err := CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +44,11 @@ func CreateB2(accountId, appKey string) (*B2, error) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	b2 := &B2{
+		AccountID:      accountId,
+		ApplicationKey: appKey,
 	}
 	return b2.parseCreateB2Response(resp)
 }
@@ -67,7 +67,7 @@ func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
 	return b2, nil
 }
 
-func (b2 *B2) CreateRequest(method, url string, request interface{}) (*http.Request, error) {
+func CreateRequest(method, url string, request interface{}) (*http.Request, error) {
 	reqBody, err := json.Marshal(request)
 	if err != nil {
 		return nil, err

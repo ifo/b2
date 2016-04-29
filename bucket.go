@@ -125,7 +125,7 @@ func (b *Bucket) bucketDelete(resp *http.Response) error {
 
 func (b2 *B2) createBucketRequest(path string, br bucketRequest) (*http.Request, error) {
 	br.AccountID = b2.AccountID
-	req, err := b2.CreateRequest("POST", b2.ApiUrl+path, br)
+	req, err := CreateRequest("POST", b2.ApiUrl+path, br)
 	if err != nil {
 		return nil, err
 	}

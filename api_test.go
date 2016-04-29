@@ -44,14 +44,13 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 }
 
 func Test_B2_CreateRequest(t *testing.T) {
-	b2 := &B2{}
 	methods := []string{"GET", "POST", "BAD METHOD"}
 	url := "https://example.com"
 	reqBody := struct{ a int }{a: 1}
 
 	i := 0
 	for ; i < 2; i++ {
-		req, err := b2.CreateRequest(methods[i], url, reqBody)
+		req, err := CreateRequest(methods[i], url, reqBody)
 		if err != nil {
 			t.Fatalf("Expected err to be nil, instead got %+v", err)
 		}
@@ -60,7 +59,7 @@ func Test_B2_CreateRequest(t *testing.T) {
 		}
 	}
 
-	req, err := b2.CreateRequest(methods[i], url, reqBody)
+	req, err := CreateRequest(methods[i], url, reqBody)
 	if err == nil {
 		t.Fatal("Expected err to exist")
 	}
