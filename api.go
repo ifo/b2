@@ -15,12 +15,6 @@ type B2 struct {
 	AuthorizationToken string
 	ApiUrl             string
 	DownloadUrl        string
-	client             *client
-}
-
-type client struct {
-	Protocol string
-	http.Client
 }
 
 type authResponse struct {
@@ -41,15 +35,9 @@ func (e ErrorResponse) Error() string {
 }
 
 func CreateB2(accountId, appKey string) (*B2, error) {
-	c := &client{Protocol: "https", Client: http.Client{}}
-	return createB2(accountId, appKey, c)
-}
-
-func createB2(accountId, appKey string, client *client) (*B2, error) {
 	b := &B2{
 		AccountID:      accountId,
 		ApplicationKey: appKey,
-		client:         client,
 	}
 
 	req, err := b.CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
@@ -58,7 +46,7 @@ func createB2(accountId, appKey string, client *client) (*B2, error) {
 	}
 	req.SetBasicAuth(accountId, appKey)
 
-	resp, err := b.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -84,19 +72,7 @@ func (b *B2) CreateRequest(method, url string, request interface{}) (*http.Reque
 	if err != nil {
 		return nil, err
 	}
-	url, err = b.replaceProtocol(url)
-	if err != nil {
-		return nil, err
-	}
 	return http.NewRequest(method, url, bytes.NewReader(reqBody))
-}
-
-func (b *B2) replaceProtocol(url string) (string, error) {
-	protoTrim := strings.Index(url, ":")
-	if protoTrim == -1 {
-		return url, fmt.Errorf("Invalid url")
-	}
-	return b.client.Protocol + url[protoTrim:], nil
 }
 
 func GetBzInfoHeaders(resp *http.Response) map[string]string {

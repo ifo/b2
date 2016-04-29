@@ -44,78 +44,28 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 }
 
 func Test_B2_CreateRequest(t *testing.T) {
-	b2 := &B2{client: &client{Protocol: "https"}} // set client protocol to default
-
-	methods := []string{
-		"GET", "POST", "KITTENS",
-		"POST", "BAD METHOD",
-	}
-	urls := []string{
-		"http://example.com", "kittens://example.com", "aoeu://example.com",
-		"invalid-url", "http://example.com",
-	}
+	b2 := &B2{}
+	methods := []string{"GET", "POST", "BAD METHOD"}
+	url := "https://example.com"
 	reqBody := struct{ a int }{a: 1}
 
-	for i := 0; i < 3; i++ {
-		req, err := b2.CreateRequest(methods[i], urls[i], reqBody)
+	i := 0
+	for ; i < 2; i++ {
+		req, err := b2.CreateRequest(methods[i], url, reqBody)
 		if err != nil {
 			t.Fatalf("Expected err to be nil, instead got %+v", err)
-		}
-		if req.URL.Scheme != "https" {
-			t.Errorf(`Expected url protocol to be "https", instead got %s`, req.URL.Scheme)
 		}
 		if req.Body == nil {
 			t.Error("Expected req.Body to not be nil")
 		}
 	}
-	for i := 3; i < 5; i++ {
-		req, err := b2.CreateRequest(methods[i], urls[i], reqBody)
-		if req != nil {
-			t.Errorf("Expected req to be nil, instead got %+v", req)
-		}
-		if err == nil {
-			t.Fatal("Expected err to exist")
-		}
-	}
-}
 
-func Test_replaceProtocol(t *testing.T) {
-	b2s := []B2{
-		{client: &client{Protocol: "https"}},
-		{client: &client{Protocol: "http"}},
-		{client: &client{Protocol: "kittens"}},
-	}
-	urls := []string{
-		"http://localhost", "https://localhost", "http://localhost", "kittens://localhost",
-		"https://www.backblaze.com/", "https://www.backblaze.com/",
-		"http://www.backblaze.com/", "kittens://www.backblaze.com/",
-		"non/url/",
-	}
-
-	for i, b := range b2s {
-		index, i2, index2 := i+1, i+4, i+5 // make offsets
-		// localhost
-		url, err := b.replaceProtocol(urls[i])
-		if err != nil {
-			t.Errorf("Expected no error, instead got %+v", err)
-		}
-		if url != urls[index] {
-			t.Errorf("Expected url to be %s, instead got %s", urls[index], url)
-		}
-
-		// www.backblaze.com
-		url, err = b.replaceProtocol(urls[i2])
-		if err != nil {
-			t.Errorf("Expected no error, instead got %+v", err)
-		}
-		if url != urls[index2] {
-			t.Errorf("Expected url to be %s, instead got %s", urls[index2], url)
-		}
-	}
-
-	url, err := b2s[0].replaceProtocol(urls[len(urls)-1])
+	req, err := b2.CreateRequest(methods[i], url, reqBody)
 	if err == nil {
-		t.Errorf("Expected error, instead got nil, url returned was %s", url)
+		t.Fatal("Expected err to exist")
+	}
+	if req != nil {
+		t.Errorf("Expected req to be nil, instead got %+v", req)
 	}
 }
 

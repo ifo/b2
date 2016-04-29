@@ -65,7 +65,7 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 		return nil, err
 	}
 
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 		return nil, err
 	}
 
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	// ignoring the "Range" header
 	// that will be in the file part section (when added)
 
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	// ignoring the "Range" header
 	// that will be in the file part section (when added)
 
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

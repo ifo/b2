@@ -149,7 +149,7 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 		&UploadUrl{Url: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
 		&UploadUrl{Url: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
 	}
-	bucket := makeTestBucket(&B2{client: &client{Protocol: "https"}})
+	bucket := makeTestBucket(&B2{})
 	bucket.UploadUrls = uploadUrls
 	req, err := bucket.setupUploadFile(fileName, fileData, fileInfo)
 	if err != nil {

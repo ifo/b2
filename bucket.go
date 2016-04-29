@@ -44,7 +44,7 @@ func (b *B2) ListBuckets() ([]Bucket, error) {
 		return nil, err
 	}
 
-	resp, err := b.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (b *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
 		return nil, err
 	}
 
-	resp, err := b.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (b *Bucket) Update(newBucketType BucketType) error {
 		return err
 	}
 
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (b *Bucket) Delete() error {
 		return err
 	}
 
-	resp, err := b.B2.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}

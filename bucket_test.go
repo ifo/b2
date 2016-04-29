@@ -131,8 +131,7 @@ func Test_Bucket_bucketDelete(t *testing.T) {
 }
 
 func Test_B2_createBucketRequest(t *testing.T) {
-	b := &B2{ApiUrl: "http://example.com", client: &client{Protocol: "https"}}
-
+	b := &B2{ApiUrl: "http://example.com"}
 	reqs := [][]byte{}
 	fields := [][]byte{
 		[]byte("accountId"), []byte("bucketId"), []byte("bucketName"), []byte("bucketType")}
