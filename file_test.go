@@ -94,6 +94,24 @@ func Test_Bucket_parseListFile(t *testing.T) {
 	}
 }
 
+func Test_Bucket_GetFileInfo(t *testing.T) {
+	bucket := createTestBucket()
+	resp, err := bucket.GetFileInfo("")
+	if err == nil {
+		t.Error("Expected err to exist")
+	}
+	if resp != nil {
+		t.Errorf("Expected resp to be nil, instead got %+v", resp)
+	}
+
+	bucket.GetFileInfo("id")
+	req := bucket.B2.client.(*dummyClient).Req
+	auth := req.Header["Authorization"][0]
+	if auth != bucket.B2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
+	}
+}
+
 func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
