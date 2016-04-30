@@ -8,7 +8,22 @@ import (
 	"testing"
 )
 
-// TODO find a different way to test for auth
+func Test_B2_createB2(t *testing.T) {
+	b2 := createTestB2()
+	b2.createB2()
+
+	req := b2.client.(*dummyClient).Req
+	username, password, ok := req.BasicAuth()
+	if !ok {
+		t.Fatal("Expected getting Basic Auth to be successful")
+	}
+	if username != b2.AccountID {
+		t.Errorf("Expected username to be %s, instead got %s", b2.AccountID, username)
+	}
+	if password != b2.ApplicationKey {
+		t.Errorf("Expected password to be %s, instead got %s", b2.ApplicationKey, password)
+	}
+}
 
 func Test_B2_parseCreateB2Response(t *testing.T) {
 	resp := createTestResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
@@ -89,6 +104,25 @@ func Test_GetBzInfoHeaders(t *testing.T) {
 	}
 	if h := bzHeaders["thing"]; h != "one" {
 		t.Errorf(`Expected thing to be "one", instead got %s`, h)
+	}
+}
+
+type dummyClient struct {
+	Req *http.Request
+}
+
+func (dc *dummyClient) Do(req *http.Request) (*http.Response, error) {
+	dc.Req = req
+	return createTestResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`), nil
+}
+
+func createTestB2() *B2 {
+	return &B2{
+		AccountID:          "id",
+		AuthorizationToken: "token",
+		ApiUrl:             "https://api900.backblaze.com",
+		DownloadUrl:        "https://f900.backblaze.com",
+		client:             &dummyClient{},
 	}
 }
 

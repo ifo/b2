@@ -15,6 +15,11 @@ type B2 struct {
 	AuthorizationToken string
 	ApiUrl             string
 	DownloadUrl        string
+	client             client
+}
+
+type client interface {
+	Do(*http.Request) (*http.Response, error)
 }
 
 type authResponse struct {
@@ -35,21 +40,26 @@ func (e ErrorResponse) Error() string {
 }
 
 func CreateB2(accountId, appKey string) (*B2, error) {
+	b2 := &B2{
+		AccountID:      accountId,
+		ApplicationKey: appKey,
+		client:         http.DefaultClient,
+	}
+	return b2.createB2()
+}
+
+func (b2 *B2) createB2() (*B2, error) {
 	req, err := CreateRequest("GET", "https://api.backblaze.com/b2api/v1/b2_authorize_account", nil)
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(accountId, appKey)
+	req.SetBasicAuth(b2.AccountID, b2.ApplicationKey)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	b2 := &B2{
-		AccountID:      accountId,
-		ApplicationKey: appKey,
-	}
 	return b2.parseCreateB2Response(resp)
 }
 
