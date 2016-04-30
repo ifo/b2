@@ -112,7 +112,7 @@ func (b *Bucket) Delete() error {
 		return err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return err
 	}
