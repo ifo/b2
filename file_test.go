@@ -8,6 +8,16 @@ import (
 	"time"
 )
 
+func Test_Bucket_ListfileNames(t *testing.T) {
+	bucket := createTestBucket()
+	bucket.ListFileNames("name", 1)
+	req := bucket.B2.client.(*dummyClient).Req
+	auth := req.Header["Authorization"][0]
+	if auth != bucket.B2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
+	}
+}
+
 func Test_Bucket_parseListFile(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""

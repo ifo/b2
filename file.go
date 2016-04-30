@@ -57,6 +57,7 @@ type fileMetaRequest struct {
 
 func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
 	requestBody := listFileRequest{
+		BucketID:      b.BucketID,
 		StartFileName: startFileName,
 		MaxFileCount:  maxFileCount,
 	}
@@ -65,7 +66,7 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
