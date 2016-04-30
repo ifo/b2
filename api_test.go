@@ -72,6 +72,15 @@ func Test_B2_CreateRequest(t *testing.T) {
 		if req.Body == nil {
 			t.Error("Expected req.Body to not be nil")
 		}
+		if req.Method != methods[i] {
+			t.Errorf("Expected req.Method to be methods[i], instead got %s", req.Method)
+		}
+		if req.URL.Scheme != "https" {
+			t.Errorf(`Expected req.URL.Scheme to be "https", instead got %s`, req.URL.Scheme)
+		}
+		if req.URL.Host != "example.com" {
+			t.Errorf(`Expected req.URL.Host to be "example.com", instead got %s`, req.URL.Host)
+		}
 	}
 
 	req, err := CreateRequest(methods[i], url, reqBody)
