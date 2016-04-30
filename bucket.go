@@ -71,7 +71,7 @@ func (b2 *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) 
 		return nil, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
