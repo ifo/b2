@@ -44,7 +44,7 @@ func (b2 *B2) ListBuckets() ([]Bucket, error) {
 		return nil, err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

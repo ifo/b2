@@ -6,6 +6,16 @@ import (
 	"testing"
 )
 
+func Test_B2_ListBuckets(t *testing.T) {
+	b2 := createTestB2()
+	b2.ListBuckets()
+	req := b2.client.(*dummyClient).Req
+	auth := req.Header["Authorization"][0]
+	if auth != b2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", b2.AuthorizationToken, auth)
+	}
+}
+
 func Test_listBuckets(t *testing.T) {
 	resp := createTestResponse(200, `{"buckets":
 [{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
