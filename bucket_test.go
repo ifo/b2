@@ -93,6 +93,16 @@ func Test_B2_createBucket(t *testing.T) {
 	}
 }
 
+func Test_Bucket_Update(t *testing.T) {
+	bucket := createTestBucket()
+	bucket.Update(AllPrivate)
+	req := bucket.B2.client.(*dummyClient).Req
+	auth := req.Header["Authorization"][0]
+	if auth != bucket.B2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
+	}
+}
+
 func Test_Bucket_update(t *testing.T) {
 	resp := createTestResponse(200,
 		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
@@ -222,7 +232,7 @@ func createTestBucket() *Bucket {
 		BucketID:   "id",
 		BucketName: "bucket",
 		BucketType: AllPrivate,
-		B2:         &B2{},
+		B2:         createTestB2(),
 	}
 }
 
