@@ -127,12 +127,18 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 }
 
 func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]string) (*FileMeta, error) {
+	if name == "" {
+		return nil, fmt.Errorf("No file name provided")
+	}
+	if file == nil {
+		return nil, fmt.Errorf("No file data provided")
+	}
 	req, err := b.setupUploadFile(name, file, fileInfo)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := http.DefaultClient.Do(req)
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
