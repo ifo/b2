@@ -296,7 +296,7 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", b.B2.AuthorizationToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
