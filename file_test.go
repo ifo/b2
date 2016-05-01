@@ -176,7 +176,13 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 }
 
 func Test_Bucket_GetUploadUrl(t *testing.T) {
-	t.Skip()
+	bucket := createTestBucket()
+	bucket.GetUploadUrl()
+	req := bucket.B2.client.(*dummyClient).Req
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
+	}
 }
 
 func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {

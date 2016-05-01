@@ -191,8 +191,8 @@ func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := http.DefaultClient.Do(req)
+	req.Header.Set("Authorization", b.B2.AuthorizationToken)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
