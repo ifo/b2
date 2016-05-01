@@ -10,8 +10,8 @@ func Test_B2_ListBuckets(t *testing.T) {
 	b2 := createTestB2()
 	b2.ListBuckets()
 	req := b2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != b2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != b2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", b2.AuthorizationToken, auth)
 	}
 }
@@ -55,8 +55,8 @@ func Test_B2_CreateBucket(t *testing.T) {
 	b2 := createTestB2()
 	b2.ListBuckets()
 	req := b2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != b2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != b2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", b2.AuthorizationToken, auth)
 	}
 }
@@ -97,8 +97,8 @@ func Test_Bucket_Update(t *testing.T) {
 	bucket := createTestBucket()
 	bucket.Update(AllPrivate)
 	req := bucket.B2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != bucket.B2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
 	}
 }
@@ -140,8 +140,8 @@ func Test_Bucket_Delete(t *testing.T) {
 	bucket := createTestBucket()
 	bucket.Delete()
 	req := bucket.B2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != bucket.B2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
 	}
 }

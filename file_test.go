@@ -12,8 +12,8 @@ func Test_Bucket_ListfileNames(t *testing.T) {
 	bucket := createTestBucket()
 	bucket.ListFileNames("name", 1)
 	req := bucket.B2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != bucket.B2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
 	}
 }
@@ -30,8 +30,8 @@ func Test_Bucket_ListFileVersions(t *testing.T) {
 
 	bucket.ListFileVersions("name", "id", 1)
 	req := bucket.B2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != bucket.B2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
 	}
 }
@@ -106,8 +106,8 @@ func Test_Bucket_GetFileInfo(t *testing.T) {
 
 	bucket.GetFileInfo("id")
 	req := bucket.B2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != bucket.B2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
 	}
 }
@@ -133,8 +133,8 @@ func Test_Bucket_UploadFile(t *testing.T) {
 	bucket.UploadUrls = []*UploadUrl{createTestUploadUrl()}
 	bucket.UploadFile("name", bytes.NewReader([]byte("cats")), nil)
 	req := bucket.B2.client.(*dummyClient).Req
-	auth := req.Header["Authorization"][0]
-	if auth != bucket.B2.AuthorizationToken {
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
 	}
 }
