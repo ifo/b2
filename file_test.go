@@ -329,6 +329,16 @@ func Test_Bucket_HideFile(t *testing.T) {
 	}
 }
 
+func Test_Bucket_DeleteFileVersion(t *testing.T) {
+	bucket := createTestBucket()
+	bucket.DeleteFileVersion("name", "id")
+	req := bucket.B2.client.(*dummyClient).Req
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
+	}
+}
+
 func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
