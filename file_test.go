@@ -97,8 +97,8 @@ func Test_Bucket_parseListFile(t *testing.T) {
 func Test_Bucket_GetFileInfo(t *testing.T) {
 	bucket := createTestBucket()
 	resp, err := bucket.GetFileInfo("")
-	if err == nil {
-		t.Error("Expected err to exist")
+	if err.Error() != "No fileID provided" {
+		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
 	}
 	if resp != nil {
 		t.Errorf("Expected resp to be nil, instead got %+v", resp)
@@ -139,67 +139,6 @@ func Test_Bucket_UploadFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseFileMetaResponse(t *testing.T) {
-	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
-
-	for i := range fileAction {
-		resp := createTestResponse(200, createTestFileJson(i, fileAction[i], nil))
-
-		bucket := createTestBucket()
-
-		fileMeta, err := bucket.parseFileMetaResponse(resp)
-		if err != nil {
-			t.Fatalf("Expected no error, instead got %s", err)
-		}
-
-		if fileMeta.Action != fileAction[i] {
-			t.Errorf("Expected action to be %v, instead got %v", fileAction[i], fileMeta.Action)
-		}
-		if fileMeta.ID != fmt.Sprintf("id%d", i) {
-			t.Errorf("Expected file ID to be id%d, instead got %s", i, fileMeta.ID)
-		}
-		if fileMeta.Name != fmt.Sprintf("name%d", i) {
-			t.Errorf("Expected file name to be name%d, instead got %s", i, fileMeta.Name)
-		}
-		if fileMeta.ContentLength != int64(10+i) {
-			t.Errorf("Expected content length to be %d, instead got %d", 10+i, fileMeta.ContentLength)
-		}
-		if fileMeta.ContentSha1 != "sha1" {
-			t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, fileMeta.ContentSha1)
-		}
-		if fileMeta.ContentType != "text" {
-			t.Errorf("Expected content type to be text, instead got %s", fileMeta.ContentType)
-		}
-		if fileMeta.Bucket != bucket {
-			t.Errorf("Expected file bucket to be bucket, instead got %+v", fileMeta.Bucket)
-		}
-		for k, v := range fileMeta.FileInfo {
-			t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
-		}
-	}
-
-	resps := createTestErrorResponses()
-	for i, resp := range resps {
-		bucket := createTestBucket()
-		fileMeta, err := bucket.parseFileMetaResponse(resp)
-		testErrorResponse(err, 400+i, t)
-		if fileMeta != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", fileMeta)
-		}
-	}
-}
-
-func Test_Bucket_GetFileInfo_NoFileID(t *testing.T) {
-	bucket := createTestBucket()
-	fileInfo, err := bucket.GetFileInfo("")
-	if err.Error() != "No fileID provided" {
-		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
-	}
-	if fileInfo != nil {
-		t.Errorf("Expected fileInfo to be empty, instead got %+v", fileInfo)
-	}
-}
-
 func Test_Bucket_setupUploadFile(t *testing.T) {
 	fileName := "cats.txt"
 	fileData := bytes.NewReader([]byte("cats cats cats cats"))
@@ -234,6 +173,10 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 			t.Errorf("Expected req header %s to be %s, instead got %s", k, v, req.Header.Get(k))
 		}
 	}
+}
+
+func Test_Bucket_GetUploadUrl(t *testing.T) {
+	t.Skip()
 }
 
 func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
@@ -332,6 +275,55 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 	}
 }
 
+func Test_Bucket_parseFileMetaResponse(t *testing.T) {
+	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
+
+	for i := range fileAction {
+		resp := createTestResponse(200, createTestFileJson(i, fileAction[i], nil))
+
+		bucket := createTestBucket()
+
+		fileMeta, err := bucket.parseFileMetaResponse(resp)
+		if err != nil {
+			t.Fatalf("Expected no error, instead got %s", err)
+		}
+
+		if fileMeta.Action != fileAction[i] {
+			t.Errorf("Expected action to be %v, instead got %v", fileAction[i], fileMeta.Action)
+		}
+		if fileMeta.ID != fmt.Sprintf("id%d", i) {
+			t.Errorf("Expected file ID to be id%d, instead got %s", i, fileMeta.ID)
+		}
+		if fileMeta.Name != fmt.Sprintf("name%d", i) {
+			t.Errorf("Expected file name to be name%d, instead got %s", i, fileMeta.Name)
+		}
+		if fileMeta.ContentLength != int64(10+i) {
+			t.Errorf("Expected content length to be %d, instead got %d", 10+i, fileMeta.ContentLength)
+		}
+		if fileMeta.ContentSha1 != "sha1" {
+			t.Errorf(`Expected content sha1 to be "sha1", instead got %s`, fileMeta.ContentSha1)
+		}
+		if fileMeta.ContentType != "text" {
+			t.Errorf("Expected content type to be text, instead got %s", fileMeta.ContentType)
+		}
+		if fileMeta.Bucket != bucket {
+			t.Errorf("Expected file bucket to be bucket, instead got %+v", fileMeta.Bucket)
+		}
+		for k, v := range fileMeta.FileInfo {
+			t.Errorf("Expected fileInfo to be blank, instead got %s, %s", k, v)
+		}
+	}
+
+	resps := createTestErrorResponses()
+	for i, resp := range resps {
+		bucket := createTestBucket()
+		fileMeta, err := bucket.parseFileMetaResponse(resp)
+		testErrorResponse(err, 400+i, t)
+		if fileMeta != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", fileMeta)
+		}
+	}
+}
 func Test_Bucket_cleanUploadUrls(t *testing.T) {
 	bucket := createTestBucket()
 
