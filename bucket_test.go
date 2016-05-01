@@ -53,7 +53,7 @@ func Test_parseListBuckets(t *testing.T) {
 
 func Test_B2_CreateBucket(t *testing.T) {
 	b2 := createTestB2()
-	b2.ListBuckets()
+	b2.CreateBucket("name", AllPrivate)
 	req := b2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != b2.AuthorizationToken {
