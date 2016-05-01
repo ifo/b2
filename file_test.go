@@ -223,6 +223,25 @@ func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
 	}
 }
 
+func Test_Bucket_DownloadFileByName(t *testing.T) {
+	bucket := createTestBucket()
+	bucket.DownloadFileByName("name")
+	req := bucket.B2.client.(*dummyClient).Req
+	auth, ok := req.Header["Authorization"]
+	if !ok || auth[0] != bucket.B2.AuthorizationToken {
+		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
+	}
+
+	// public buckets don't need authorization
+	bucket.BucketType = AllPublic
+	bucket.DownloadFileByName("name")
+	req = bucket.B2.client.(*dummyClient).Req
+	auth, ok = req.Header["Authorization"]
+	if ok {
+		t.Errorf("Expected auth to be empty, instead got %s", auth)
+	}
+}
+
 func Test_Bucket_parseFileResponse(t *testing.T) {
 	headers := map[string][]string{
 		"X-Bz-File-Id":      {"1"},
