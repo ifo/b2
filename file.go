@@ -242,7 +242,7 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	// ignoring the "Range" header
 	// that will be in the file part section (when added)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b.B2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
