@@ -185,12 +185,12 @@ func Test_Bucket_GetUploadUrl(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
+func Test_Bucket_parseGetUploadUrl(t *testing.T) {
 	uploadUrlStr := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
 	resp := createTestResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrlStr))
 
 	bucket := createTestBucket()
-	uploadUrl, err := bucket.parseGetUploadUrlResponse(resp)
+	uploadUrl, err := bucket.parseGetUploadUrl(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -215,7 +215,7 @@ func Test_Bucket_parseGetUploadUrlResponse(t *testing.T) {
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
 		bucket := createTestBucket()
-		uploadUrl, err := bucket.parseGetUploadUrlResponse(resp)
+		uploadUrl, err := bucket.parseGetUploadUrl(resp)
 		testErrorResponse(err, 400+i, t)
 		if uploadUrl != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
@@ -261,7 +261,7 @@ func Test_Bucket_DownloadFileByID(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseFileResponse(t *testing.T) {
+func Test_Bucket_parseFile(t *testing.T) {
 	headers := map[string][]string{
 		"X-Bz-File-Id":      {"1"},
 		"X-Bz-File-Name":    {"cats.txt"},
@@ -274,7 +274,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 	resp.Header = headers
 
 	bucket := createTestBucket()
-	file, err := bucket.parseFileResponse(resp)
+	file, err := bucket.parseFile(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
@@ -311,7 +311,7 @@ func Test_Bucket_parseFileResponse(t *testing.T) {
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
 		bucket := createTestBucket()
-		uploadUrl, err := bucket.parseFileResponse(resp)
+		uploadUrl, err := bucket.parseFile(resp)
 		testErrorResponse(err, 400+i, t)
 		if uploadUrl != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
@@ -339,7 +339,7 @@ func Test_Bucket_DeleteFileVersion(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseFileMetaResponse(t *testing.T) {
+func Test_Bucket_parseFileMeta(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
@@ -347,7 +347,7 @@ func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 
 		bucket := createTestBucket()
 
-		fileMeta, err := bucket.parseFileMetaResponse(resp)
+		fileMeta, err := bucket.parseFileMeta(resp)
 		if err != nil {
 			t.Fatalf("Expected no error, instead got %s", err)
 		}
@@ -381,7 +381,7 @@ func Test_Bucket_parseFileMetaResponse(t *testing.T) {
 	resps := createTestErrorResponses()
 	for i, resp := range resps {
 		bucket := createTestBucket()
-		fileMeta, err := bucket.parseFileMetaResponse(resp)
+		fileMeta, err := bucket.parseFileMeta(resp)
 		testErrorResponse(err, 400+i, t)
 		if fileMeta != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", fileMeta)

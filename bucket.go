@@ -48,10 +48,10 @@ func (b2 *B2) ListBuckets() ([]Bucket, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b2.listBuckets(resp)
+	return b2.parseListBuckets(resp)
 }
 
-func (b2 *B2) listBuckets(resp *http.Response) ([]Bucket, error) {
+func (b2 *B2) parseListBuckets(resp *http.Response) ([]Bucket, error) {
 	respBody := &listBucketsResponse{}
 	err := ParseResponse(resp, respBody)
 	if err != nil {
@@ -75,10 +75,10 @@ func (b2 *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) 
 	if err != nil {
 		return nil, err
 	}
-	return b2.createBucket(resp)
+	return b2.parseCreateBucket(resp)
 }
 
-func (b2 *B2) createBucket(resp *http.Response) (*Bucket, error) {
+func (b2 *B2) parseCreateBucket(resp *http.Response) (*Bucket, error) {
 	bucket := &Bucket{B2: b2}
 	err := ParseResponse(resp, bucket)
 	if err != nil {
@@ -98,10 +98,10 @@ func (b *Bucket) Update(newBucketType BucketType) error {
 	if err != nil {
 		return err
 	}
-	return b.update(resp)
+	return b.parseUpdate(resp)
 }
 
-func (b *Bucket) update(resp *http.Response) error {
+func (b *Bucket) parseUpdate(resp *http.Response) error {
 	return ParseResponse(resp, b)
 }
 
@@ -116,10 +116,10 @@ func (b *Bucket) Delete() error {
 	if err != nil {
 		return err
 	}
-	return b.bucketDelete(resp)
+	return b.parseDelete(resp)
 }
 
-func (b *Bucket) bucketDelete(resp *http.Response) error {
+func (b *Bucket) parseDelete(resp *http.Response) error {
 	return ParseResponse(resp, b)
 }
 

@@ -123,7 +123,7 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseFileMetaResponse(resp)
+	return b.parseFileMeta(resp)
 }
 
 func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]string) (*FileMeta, error) {
@@ -142,7 +142,7 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	if err != nil {
 		return nil, err
 	}
-	return b.parseFileMetaResponse(resp)
+	return b.parseFileMeta(resp)
 }
 
 func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[string]string) (*http.Request, error) {
@@ -196,10 +196,10 @@ func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseGetUploadUrlResponse(resp)
+	return b.parseGetUploadUrl(resp)
 }
 
-func (b *Bucket) parseGetUploadUrlResponse(resp *http.Response) (*UploadUrl, error) {
+func (b *Bucket) parseGetUploadUrl(resp *http.Response) (*UploadUrl, error) {
 	uploadUrl := &UploadUrl{Expiration: time.Now().UTC().Add(24 * time.Hour)}
 	err := ParseResponse(resp, uploadUrl)
 	if err != nil {
@@ -226,7 +226,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseFileResponse(resp)
+	return b.parseFile(resp)
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
@@ -246,10 +246,10 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseFileResponse(resp)
+	return b.parseFile(resp)
 }
 
-func (b *Bucket) parseFileResponse(resp *http.Response) (*File, error) {
+func (b *Bucket) parseFile(resp *http.Response) (*File, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
@@ -300,7 +300,7 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseFileMetaResponse(resp)
+	return b.parseFileMeta(resp)
 }
 
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
@@ -317,10 +317,10 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseFileMetaResponse(resp)
+	return b.parseFileMeta(resp)
 }
 
-func (b *Bucket) parseFileMetaResponse(resp *http.Response) (*FileMeta, error) {
+func (b *Bucket) parseFileMeta(resp *http.Response) (*FileMeta, error) {
 	respBody := &FileMeta{}
 	err := ParseResponse(resp, respBody)
 	if err != nil {
