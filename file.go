@@ -253,7 +253,7 @@ func (b *Bucket) parseFile(resp *http.Response) (*File, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, parseResponseError(resp)
+		return nil, parseAPIError(resp)
 	}
 
 	bts, err := ioutil.ReadAll(resp.Body)

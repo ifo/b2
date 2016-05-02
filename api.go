@@ -29,13 +29,13 @@ type authResponse struct {
 	DownloadURL        string `json:"downloadUrl"`
 }
 
-type ResponseError struct {
+type APIError struct {
 	Status  int64  `json:"status"`
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e ResponseError) Error() string {
+func (e APIError) Error() string {
 	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
 }
 
@@ -97,7 +97,7 @@ func parseResponse(resp *http.Response, body interface{}) error {
 	if resp.StatusCode == 200 {
 		return parseResponseBody(resp, body)
 	} else {
-		return parseResponseError(resp)
+		return parseAPIError(resp)
 	}
 }
 
@@ -109,8 +109,8 @@ func parseResponseBody(resp *http.Response, body interface{}) error {
 	return json.Unmarshal(b, body)
 }
 
-func parseResponseError(resp *http.Response) error {
-	e := &ResponseError{}
+func parseAPIError(resp *http.Response) error {
+	e := &APIError{}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err

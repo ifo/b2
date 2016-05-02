@@ -47,11 +47,11 @@ func TestB2_parseCreateB2Response(t *testing.T) {
 		t.Errorf(`Expected DownloadURL to be "/", instead got %s`, b.DownloadURL)
 	}
 
-	resps := testResponseErrors()
+	resps := testAPIErrors()
 	for i, resp := range resps {
 		b := &B2{AccountID: "1", ApplicationKey: "key"}
 		b, err := b.parseCreateB2Response(resp)
-		checkResponseError(err, 400+i, t)
+		checkAPIError(err, 400+i, t)
 		if b != nil {
 			t.Errorf("Expected b to be nil, instead got %+v", b)
 		}
@@ -142,14 +142,14 @@ func testResponse(statusCode int, body string) *http.Response {
 	}
 }
 
-func testResponseErrors() []*http.Response {
+func testAPIErrors() []*http.Response {
 	return []*http.Response{
 		testResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`),
 		testResponse(401, `{"status":401,"code":"nope","message":"nope nope"}`),
 	}
 }
 
-func checkResponseError(err error, code int, t *testing.T) {
+func checkAPIError(err error, code int, t *testing.T) {
 	if err == nil {
 		t.Error("Expected error, no error received")
 	} else if err.Error() != fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {
