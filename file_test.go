@@ -40,7 +40,7 @@ func Test_Bucket_parseListFile(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""
 	for i := range fileAction {
-		setupFiles += createTestFileJson(i, fileAction[i], nil)
+		setupFiles += createTestFileJSON(i, fileAction[i], nil)
 		if i != len(fileAction)-1 {
 			setupFiles += ","
 		}
@@ -130,7 +130,7 @@ func Test_Bucket_UploadFile(t *testing.T) {
 		t.Errorf("Expected resp to be nil, instead got %+v", resp)
 	}
 
-	bucket.UploadUrls = []*UploadUrl{createTestUploadUrl()}
+	bucket.UploadURLs = []*UploadURL{createTestUploadURL()}
 	bucket.UploadFile("name", bytes.NewReader([]byte("cats")), nil)
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -157,12 +157,12 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 		"X-Bz-Info-file-dogs": fileInfo["file-dogs"],
 	}
 
-	uploadUrls := []*UploadUrl{
-		{Url: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
-		{Url: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
+	uploadURLs := []*UploadURL{
+		{URL: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
+		{URL: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
 	}
 	bucket := createTestBucket()
-	bucket.UploadUrls = uploadUrls
+	bucket.UploadURLs = uploadURLs
 	req, err := bucket.setupUploadFile(fileName, fileData, fileInfo)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -175,9 +175,9 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_GetUploadUrl(t *testing.T) {
+func Test_Bucket_GetUploadURL(t *testing.T) {
 	bucket := createTestBucket()
-	bucket.GetUploadUrl()
+	bucket.GetUploadURL()
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
@@ -185,40 +185,40 @@ func Test_Bucket_GetUploadUrl(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseGetUploadUrl(t *testing.T) {
-	uploadUrlStr := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
-	resp := createTestResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadUrlStr))
+func Test_Bucket_parseGetUploadURL(t *testing.T) {
+	uploadURLStr := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
+	resp := createTestResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadURLStr))
 
 	bucket := createTestBucket()
-	uploadUrl, err := bucket.parseGetUploadUrl(resp)
+	uploadURL, err := bucket.parseGetUploadURL(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	if uploadUrl.Expiration.IsZero() {
+	if uploadURL.Expiration.IsZero() {
 		t.Error("Expected time to be now + 24h, instead got zero time")
 	}
-	if uploadUrl.AuthorizationToken != "token" {
-		t.Errorf(`Expected uploadUrl token to be "token", instead got %s`, uploadUrl.AuthorizationToken)
+	if uploadURL.AuthorizationToken != "token" {
+		t.Errorf(`Expected uploadURL token to be "token", instead got %s`, uploadURL.AuthorizationToken)
 	}
-	if uploadUrl.Url != uploadUrlStr {
-		t.Errorf("Expected uploadUrl's url to be uploadUrlStr, instead got %s", uploadUrl.Url)
+	if uploadURL.URL != uploadURLStr {
+		t.Errorf("Expected uploadURL's url to be uploadURLStr, instead got %s", uploadURL.URL)
 	}
 
-	if len(bucket.UploadUrls) != 1 {
-		t.Fatalf("Expected length of bucket upload urls to be 1, insetad was %d", len(bucket.UploadUrls))
+	if len(bucket.UploadURLs) != 1 {
+		t.Fatalf("Expected length of bucket upload urls to be 1, insetad was %d", len(bucket.UploadURLs))
 	}
-	if bucket.UploadUrls[0] != uploadUrl {
-		t.Error("Expected bucket's first uploadUrl to be uploadUrl, instead was", bucket.UploadUrls[0])
+	if bucket.UploadURLs[0] != uploadURL {
+		t.Error("Expected bucket's first uploadURL to be uploadURL, instead was", bucket.UploadURLs[0])
 	}
 
 	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
-		uploadUrl, err := bucket.parseGetUploadUrl(resp)
+		uploadURL, err := bucket.parseGetUploadURL(resp)
 		checkResponseError(err, 400+i, t)
-		if uploadUrl != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
+		if uploadURL != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", uploadURL)
 		}
 	}
 }
@@ -311,10 +311,10 @@ func Test_Bucket_parseFile(t *testing.T) {
 	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
-		uploadUrl, err := bucket.parseFile(resp)
+		uploadURL, err := bucket.parseFile(resp)
 		checkResponseError(err, 400+i, t)
-		if uploadUrl != nil {
-			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
+		if uploadURL != nil {
+			t.Errorf("Expected response to be empty, instead got %+v", uploadURL)
 		}
 	}
 }
@@ -343,7 +343,7 @@ func Test_Bucket_parseFileMeta(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
-		resp := createTestResponse(200, createTestFileJson(i, fileAction[i], nil))
+		resp := createTestResponse(200, createTestFileJSON(i, fileAction[i], nil))
 
 		bucket := createTestBucket()
 
@@ -388,7 +388,7 @@ func Test_Bucket_parseFileMeta(t *testing.T) {
 		}
 	}
 }
-func Test_Bucket_cleanUploadUrls(t *testing.T) {
+func Test_Bucket_cleanUploadURLs(t *testing.T) {
 	bucket := createTestBucket()
 
 	times := []time.Time{
@@ -397,26 +397,26 @@ func Test_Bucket_cleanUploadUrls(t *testing.T) {
 		time.Now().UTC().Add(-1 * time.Hour),
 		time.Now().UTC().Add(2 * time.Hour),
 	}
-	// two UploadUrls should be cleaned
-	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[0]})
-	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[1]})
-	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[2]})
-	bucket.UploadUrls = append(bucket.UploadUrls, &UploadUrl{Expiration: times[3]})
+	// two UploadURLs should be cleaned
+	bucket.UploadURLs = append(bucket.UploadURLs, &UploadURL{Expiration: times[0]})
+	bucket.UploadURLs = append(bucket.UploadURLs, &UploadURL{Expiration: times[1]})
+	bucket.UploadURLs = append(bucket.UploadURLs, &UploadURL{Expiration: times[2]})
+	bucket.UploadURLs = append(bucket.UploadURLs, &UploadURL{Expiration: times[3]})
 
-	bucket.cleanUploadUrls()
+	bucket.cleanUploadURLs()
 
-	if len(bucket.UploadUrls) != 2 {
-		t.Fatalf("Expected UploadUrls length to be 2, instead got %d", len(bucket.UploadUrls))
+	if len(bucket.UploadURLs) != 2 {
+		t.Fatalf("Expected UploadURLs length to be 2, instead got %d", len(bucket.UploadURLs))
 	}
-	if bucket.UploadUrls[0].Expiration != times[1] {
-		t.Errorf("Expected url[0].Expiration to be times[1], instead got %v", bucket.UploadUrls[0].Expiration)
+	if bucket.UploadURLs[0].Expiration != times[1] {
+		t.Errorf("Expected url[0].Expiration to be times[1], instead got %v", bucket.UploadURLs[0].Expiration)
 	}
-	if bucket.UploadUrls[1].Expiration != times[3] {
-		t.Errorf("Expected url[1].Expiration to be times[3], instead got %v", bucket.UploadUrls[1].Expiration)
+	if bucket.UploadURLs[1].Expiration != times[3] {
+		t.Errorf("Expected url[1].Expiration to be times[3], instead got %v", bucket.UploadURLs[1].Expiration)
 	}
 }
 
-func createTestFileJson(num int, action Action, fileInfo map[string]string) string {
+func createTestFileJSON(num int, action Action, fileInfo map[string]string) string {
 	file := FileMeta{
 		ID:              fmt.Sprintf("id%d", num),
 		Name:            fmt.Sprintf("name%d", num),
@@ -428,13 +428,13 @@ func createTestFileJson(num int, action Action, fileInfo map[string]string) stri
 		FileInfo:        fileInfo,
 		UploadTimestamp: int64(100 + num),
 	}
-	fileJson, _ := json.Marshal(file)
-	return string(fileJson)
+	fileJSON, _ := json.Marshal(file)
+	return string(fileJSON)
 }
 
-func createTestUploadUrl() *UploadUrl {
-	return &UploadUrl{
-		Url:                "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id",
+func createTestUploadURL() *UploadURL {
+	return &UploadURL{
+		URL:                "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id",
 		AuthorizationToken: "token",
 		Expiration:         time.Now().UTC().Add(24 * time.Hour),
 	}

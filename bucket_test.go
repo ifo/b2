@@ -165,7 +165,7 @@ func Test_Bucket_parseDelete(t *testing.T) {
 }
 
 func Test_B2_createBucketRequest(t *testing.T) {
-	b2 := &B2{ApiUrl: "http://example.com"}
+	b2 := &B2{APIURL: "http://example.com"}
 	reqs := [][]byte{}
 	fields := [][]byte{
 		[]byte("accountId"), []byte("bucketId"), []byte("bucketName"), []byte("bucketType")}

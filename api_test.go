@@ -40,11 +40,11 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 	if b.AuthorizationToken != "1" {
 		t.Errorf(`Expected AuthorizationToken to be "1", instead got %s`, b.AuthorizationToken)
 	}
-	if b.ApiUrl != "/" {
-		t.Errorf(`Expected ApiUrl to be "/", instead got %s`, b.ApiUrl)
+	if b.APIURL != "/" {
+		t.Errorf(`Expected APIURL to be "/", instead got %s`, b.APIURL)
 	}
-	if b.DownloadUrl != "/" {
-		t.Errorf(`Expected DownloadUrl to be "/", instead got %s`, b.DownloadUrl)
+	if b.DownloadURL != "/" {
+		t.Errorf(`Expected DownloadURL to be "/", instead got %s`, b.DownloadURL)
 	}
 
 	resps := createTestResponseErrors()
@@ -129,8 +129,8 @@ func createTestB2() *B2 {
 	return &B2{
 		AccountID:          "id",
 		AuthorizationToken: "token",
-		ApiUrl:             "https://api900.backblaze.com",
-		DownloadUrl:        "https://f900.backblaze.com",
+		APIURL:             "https://api900.backblaze.com",
+		DownloadURL:        "https://f900.backblaze.com",
 		client:             &dummyClient{},
 	}
 }

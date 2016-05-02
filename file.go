@@ -61,7 +61,7 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 		StartFileName: startFileName,
 		MaxFileCount:  maxFileCount,
 	}
-	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_list_file_names", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 		StartFileID:   startFileID,
 		MaxFileCount:  maxFileCount,
 	}
-	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_list_file_names", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_list_file_names", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 		return nil, fmt.Errorf("No fileID provided")
 	}
 	requestBody := fileMetaRequest{FileID: fileID}
-	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_file_info", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_file_info", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -146,21 +146,21 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 }
 
 func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[string]string) (*http.Request, error) {
-	b.cleanUploadUrls()
+	b.cleanUploadURLs()
 
-	uploadUrl := &UploadUrl{}
+	uploadURL := &UploadURL{}
 	var err error
-	if len(b.UploadUrls) > 0 {
+	if len(b.UploadURLs) > 0 {
 		// TODO don't just pick the first usable url
-		uploadUrl = b.UploadUrls[0]
+		uploadURL = b.UploadURLs[0]
 	} else {
-		uploadUrl, err = b.GetUploadUrl()
+		uploadURL, err = b.GetUploadURL()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	req, err := CreateRequest("POST", uploadUrl.Url, file)
+	req, err := CreateRequest("POST", uploadURL.URL, file)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 	}
 
 	// TODO percent-encode header values
-	req.Header.Set("Authorization", uploadUrl.AuthorizationToken)
+	req.Header.Set("Authorization", uploadURL.AuthorizationToken)
 	req.Header.Set("X-Bz-File-Name", name)
 	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
 	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
@@ -185,9 +185,9 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 	return req, nil
 }
 
-func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
+func (b *Bucket) GetUploadURL() (*UploadURL, error) {
 	requestBody := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
-	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_get_upload_url", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_upload_url", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -196,21 +196,21 @@ func (b *Bucket) GetUploadUrl() (*UploadUrl, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b.parseGetUploadUrl(resp)
+	return b.parseGetUploadURL(resp)
 }
 
-func (b *Bucket) parseGetUploadUrl(resp *http.Response) (*UploadUrl, error) {
-	uploadUrl := &UploadUrl{Expiration: time.Now().UTC().Add(24 * time.Hour)}
-	err := ParseResponse(resp, uploadUrl)
+func (b *Bucket) parseGetUploadURL(resp *http.Response) (*UploadURL, error) {
+	uploadURL := &UploadURL{Expiration: time.Now().UTC().Add(24 * time.Hour)}
+	err := ParseResponse(resp, uploadURL)
 	if err != nil {
 		return nil, err
 	}
-	b.UploadUrls = append(b.UploadUrls, uploadUrl)
-	return uploadUrl, nil
+	b.UploadURLs = append(b.UploadURLs, uploadURL)
+	return uploadURL, nil
 }
 
 func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
-	req, err := CreateRequest("GET", b.B2.DownloadUrl+"/file/"+fileName, nil)
+	req, err := CreateRequest("GET", b.B2.DownloadURL+"/file/"+fileName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 }
 
 func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	req, err := CreateRequest("GET", b.B2.DownloadUrl+"/b2api/v1/b2_download_file_by_id?fileId="+fileID, nil)
+	req, err := CreateRequest("GET", b.B2.DownloadURL+"/b2api/v1/b2_download_file_by_id?fileId="+fileID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 		BucketID: b.BucketID,
 		FileName: fileName,
 	}
-	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_hide_file", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_hide_file", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 		FileName: fileName,
 		FileID:   fileID,
 	}
-	req, err := CreateRequest("POST", b.B2.ApiUrl+"/b2api/v1/b2_delete_file_version", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_delete_file_version", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -331,19 +331,19 @@ func (b *Bucket) parseFileMeta(resp *http.Response) (*FileMeta, error) {
 	return respBody, nil
 }
 
-func (b *Bucket) cleanUploadUrls() {
-	// TODO prevent this from deleting an upload Url that is in use
+func (b *Bucket) cleanUploadURLs() {
+	// TODO prevent this from deleting an upload URL that is in use
 	// requires upload urls to track self usage
-	if len(b.UploadUrls) == 0 {
+	if len(b.UploadURLs) == 0 {
 		return
 	}
 
 	now := time.Now().UTC()
-	remainingUrls := []*UploadUrl{}
-	for _, url := range b.UploadUrls {
+	remainingURLs := []*UploadURL{}
+	for _, url := range b.UploadURLs {
 		if url.Expiration.After(now) {
-			remainingUrls = append(remainingUrls, url)
+			remainingURLs = append(remainingURLs, url)
 		}
 	}
-	b.UploadUrls = remainingUrls
+	b.UploadURLs = remainingURLs
 }

@@ -13,8 +13,8 @@ type B2 struct {
 	AccountID          string
 	ApplicationKey     string
 	AuthorizationToken string
-	ApiUrl             string
-	DownloadUrl        string
+	APIURL             string
+	DownloadURL        string
 	client             client
 }
 
@@ -25,8 +25,8 @@ type client interface {
 type authResponse struct {
 	AccountID          string `json:"accountId"`
 	AuthorizationToken string `json:"authorizationToken"`
-	ApiUrl             string `json:"apiUrl"`
-	DownloadUrl        string `json:"downloadUrl"`
+	APIURL             string `json:"apiUrl"`
+	DownloadURL        string `json:"downloadUrl"`
 }
 
 type ResponseError struct {
@@ -39,9 +39,9 @@ func (e ResponseError) Error() string {
 	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
 }
 
-func CreateB2(accountId, appKey string) (*B2, error) {
+func CreateB2(accountID, appKey string) (*B2, error) {
 	b2 := &B2{
-		AccountID:      accountId,
+		AccountID:      accountID,
 		ApplicationKey: appKey,
 		client:         http.DefaultClient,
 	}
@@ -68,8 +68,8 @@ func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
 		return nil, err
 	}
 	b2.AuthorizationToken = authResp.AuthorizationToken
-	b2.ApiUrl = authResp.ApiUrl
-	b2.DownloadUrl = authResp.DownloadUrl
+	b2.APIURL = authResp.APIURL
+	b2.DownloadURL = authResp.DownloadURL
 	return b2, nil
 }
 

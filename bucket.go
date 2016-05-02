@@ -9,7 +9,7 @@ type Bucket struct {
 	BucketID   string       `json:"bucketId"`
 	BucketName string       `json:"bucketName"`
 	BucketType BucketType   `json:"bucketType"`
-	UploadUrls []*UploadUrl `json:"-"`
+	UploadURLs []*UploadURL `json:"-"`
 	B2         *B2          `json:"-"`
 }
 
@@ -21,8 +21,8 @@ const (
 )
 
 // TODO? include some marker of being used (maybe mutex)
-type UploadUrl struct {
-	Url                string    `json:"uploadUrl"`
+type UploadURL struct {
+	URL                string    `json:"uploadUrl"`
 	AuthorizationToken string    `json:"authorizationToken"`
 	Expiration         time.Time `json:"-"`
 }
@@ -125,7 +125,7 @@ func (b *Bucket) parseDelete(resp *http.Response) error {
 
 func (b2 *B2) createBucketRequest(path string, br bucketRequest) (*http.Request, error) {
 	br.AccountID = b2.AccountID
-	req, err := CreateRequest("POST", b2.ApiUrl+path, br)
+	req, err := CreateRequest("POST", b2.APIURL+path, br)
 	if err != nil {
 		return nil, err
 	}
