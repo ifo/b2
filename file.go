@@ -55,13 +55,13 @@ type fileMetaRequest struct {
 	FileID   string `json:"fileId,omitempty"`
 }
 
-func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
-	requestBody := listFileRequest{
+func (b *Bucket) ListFileNames(startName string, maxCount int64) (*ListFileResponse, error) {
+	lfr := listFileRequest{
 		BucketID:      b.ID,
-		StartFileName: startFileName,
-		MaxFileCount:  maxFileCount,
+		StartFileName: startName,
+		MaxFileCount:  maxCount,
 	}
-	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_list_file_names", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_list_file_names", lfr)
 	if err != nil {
 		return nil, err
 	}
@@ -73,18 +73,18 @@ func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListF
 	return b.parseListFile(resp)
 }
 
-func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCount int64) (*ListFileResponse, error) {
-	if startFileID != "" && startFileName == "" {
-		return nil, fmt.Errorf("If startFileID is provided, startFileName must be provided")
+func (b *Bucket) ListFileVersions(startName, startID string, maxCount int64) (*ListFileResponse, error) {
+	if startID != "" && startName == "" {
+		return nil, fmt.Errorf("If startID is provided, startName must be provided")
 	}
 
-	requestBody := listFileRequest{
+	lfr := listFileRequest{
 		BucketID:      b.ID,
-		StartFileName: startFileName,
-		StartFileID:   startFileID,
-		MaxFileCount:  maxFileCount,
+		StartFileName: startName,
+		StartFileID:   startID,
+		MaxFileCount:  maxCount,
 	}
-	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_list_file_names", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_list_file_names", lfr)
 	if err != nil {
 		return nil, err
 	}
@@ -97,24 +97,24 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 }
 
 func (b *Bucket) parseListFile(resp *http.Response) (*ListFileResponse, error) {
-	respBody := &ListFileResponse{}
-	err := ParseResponse(resp, respBody)
+	lfr := &ListFileResponse{}
+	err := ParseResponse(resp, lfr)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range respBody.Files {
-		respBody.Files[i].Bucket = b
+	for i := range lfr.Files {
+		lfr.Files[i].Bucket = b
 	}
-	return respBody, nil
+	return lfr, nil
 }
 
 func (b *Bucket) GetFileInfo(fileID string) (*FileMeta, error) {
 	if fileID == "" {
 		return nil, fmt.Errorf("No fileID provided")
 	}
-	requestBody := fileMetaRequest{FileID: fileID}
-	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_file_info", requestBody)
+	fmr := fileMetaRequest{FileID: fileID}
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_file_info", fmr)
 	if err != nil {
 		return nil, err
 	}
@@ -148,34 +148,34 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[string]string) (*http.Request, error) {
 	b.cleanUploadURLs()
 
-	uploadURL := &UploadURL{}
+	url := &UploadURL{}
 	var err error
 	if len(b.UploadURLs) > 0 {
 		// TODO don't just pick the first usable url
-		uploadURL = b.UploadURLs[0]
+		url = b.UploadURLs[0]
 	} else {
-		uploadURL, err = b.GetUploadURL()
+		url, err = b.GetUploadURL()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	req, err := CreateRequest("POST", uploadURL.URL, file)
+	req, err := CreateRequest("POST", url.URL, file)
 	if err != nil {
 		return nil, err
 	}
 
-	fileBytes, err := ioutil.ReadAll(file)
+	bts, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO percent-encode header values
-	req.Header.Set("Authorization", uploadURL.AuthorizationToken)
+	req.Header.Set("Authorization", url.AuthorizationToken)
 	req.Header.Set("X-Bz-File-Name", name)
 	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
-	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
-	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(fileBytes)))
+	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(bts)))
+	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(bts)))
 	for k, v := range fileInfo {
 		req.Header.Set("X-Bz-Info-"+k, v)
 	}
@@ -186,8 +186,8 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 }
 
 func (b *Bucket) GetUploadURL() (*UploadURL, error) {
-	requestBody := fmt.Sprintf(`{"bucketId":"%s"}`, b.ID)
-	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_upload_url", requestBody)
+	body := fmt.Sprintf(`{"bucketId":"%s"}`, b.ID)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_upload_url", body)
 	if err != nil {
 		return nil, err
 	}
@@ -200,17 +200,17 @@ func (b *Bucket) GetUploadURL() (*UploadURL, error) {
 }
 
 func (b *Bucket) parseGetUploadURL(resp *http.Response) (*UploadURL, error) {
-	uploadURL := &UploadURL{Expiration: time.Now().UTC().Add(24 * time.Hour)}
-	err := ParseResponse(resp, uploadURL)
+	url := &UploadURL{Expiration: time.Now().UTC().Add(24 * time.Hour)}
+	err := ParseResponse(resp, url)
 	if err != nil {
 		return nil, err
 	}
-	b.UploadURLs = append(b.UploadURLs, uploadURL)
-	return uploadURL, nil
+	b.UploadURLs = append(b.UploadURLs, url)
+	return url, nil
 }
 
-func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
-	req, err := CreateRequest("GET", b.B2.DownloadURL+"/file/"+fileName, nil)
+func (b *Bucket) DownloadFileByName(name string) (*File, error) {
+	req, err := CreateRequest("GET", b.B2.DownloadURL+"/file/"+name, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -229,8 +229,8 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 	return b.parseFile(resp)
 }
 
-func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
-	req, err := CreateRequest("GET", b.B2.DownloadURL+"/b2api/v1/b2_download_file_by_id?fileId="+fileID, nil)
+func (b *Bucket) DownloadFileByID(id string) (*File, error) {
+	req, err := CreateRequest("GET", b.B2.DownloadURL+"/b2api/v1/b2_download_file_by_id?fileId="+id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -256,17 +256,17 @@ func (b *Bucket) parseFile(resp *http.Response) (*File, error) {
 		return nil, ParseResponseError(resp)
 	}
 
-	fileBytes, err := ioutil.ReadAll(resp.Body)
+	bts, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	contentLength, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	clen, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 	if err != nil {
 		return nil, err
 	}
 
-	if fmt.Sprintf("%x", sha1.Sum(fileBytes)) != resp.Header.Get("X-Bz-Content-Sha1") {
+	if fmt.Sprintf("%x", sha1.Sum(bts)) != resp.Header.Get("X-Bz-Content-Sha1") {
 		// TODO? retry download
 		return nil, fmt.Errorf("File sha1 didn't match provided sha1")
 	}
@@ -275,23 +275,23 @@ func (b *Bucket) parseFile(resp *http.Response) (*File, error) {
 		Meta: FileMeta{
 			ID:            resp.Header.Get("X-Bz-File-Id"),
 			Name:          resp.Header.Get("X-Bz-File-Name"),
-			Size:          int64(len(fileBytes)),
-			ContentLength: int64(contentLength),
+			Size:          int64(len(bts)),
+			ContentLength: int64(clen),
 			ContentSha1:   resp.Header.Get("X-Bz-Content-Sha1"),
 			ContentType:   resp.Header.Get("Content-Type"),
 			FileInfo:      GetBzInfoHeaders(resp),
 			Bucket:        b,
 		},
-		Data: fileBytes,
+		Data: bts,
 	}, nil
 }
 
-func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
-	requestBody := fileMetaRequest{
+func (b *Bucket) HideFile(name string) (*FileMeta, error) {
+	fmr := fileMetaRequest{
 		BucketID: b.ID,
-		FileName: fileName,
+		FileName: name,
 	}
-	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_hide_file", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_hide_file", fmr)
 	if err != nil {
 		return nil, err
 	}
@@ -304,11 +304,11 @@ func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 }
 
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
-	requestBody := fileMetaRequest{
+	fmr := fileMetaRequest{
 		FileName: fileName,
 		FileID:   fileID,
 	}
-	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_delete_file_version", requestBody)
+	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_delete_file_version", fmr)
 	if err != nil {
 		return nil, err
 	}
@@ -321,14 +321,14 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 }
 
 func (b *Bucket) parseFileMeta(resp *http.Response) (*FileMeta, error) {
-	respBody := &FileMeta{}
-	err := ParseResponse(resp, respBody)
+	fm := &FileMeta{}
+	err := ParseResponse(resp, fm)
 	if err != nil {
 		return nil, err
 	}
 
-	respBody.Bucket = b
-	return respBody, nil
+	fm.Bucket = b
+	return fm, nil
 }
 
 func (b *Bucket) cleanUploadURLs() {
@@ -339,11 +339,11 @@ func (b *Bucket) cleanUploadURLs() {
 	}
 
 	now := time.Now().UTC()
-	remainingURLs := []*UploadURL{}
+	urls := []*UploadURL{}
 	for _, url := range b.UploadURLs {
 		if url.Expiration.After(now) {
-			remainingURLs = append(remainingURLs, url)
+			urls = append(urls, url)
 		}
 	}
-	b.UploadURLs = remainingURLs
+	b.UploadURLs = urls
 }

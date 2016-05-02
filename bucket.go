@@ -52,21 +52,21 @@ func (b2 *B2) ListBuckets() ([]Bucket, error) {
 }
 
 func (b2 *B2) parseListBuckets(resp *http.Response) ([]Bucket, error) {
-	respBody := &listBucketsResponse{}
-	err := ParseResponse(resp, respBody)
+	lbr := &listBucketsResponse{}
+	err := ParseResponse(resp, lbr)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := range respBody.Buckets {
-		respBody.Buckets[i].B2 = b2
+	for i := range lbr.Buckets {
+		lbr.Buckets[i].B2 = b2
 	}
-	return respBody.Buckets, nil
+	return lbr.Buckets, nil
 }
 
-func (b2 *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) {
-	bucketReq := bucketRequest{BucketName: name, BucketType: bucketType}
-	req, err := b2.createBucketRequest("/b2api/v1/b2_list_buckets", bucketReq)
+func (b2 *B2) CreateBucket(name string, t BucketType) (*Bucket, error) {
+	br := bucketRequest{BucketName: name, BucketType: t}
+	req, err := b2.createBucketRequest("/b2api/v1/b2_list_buckets", br)
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +79,12 @@ func (b2 *B2) CreateBucket(name string, bucketType BucketType) (*Bucket, error) 
 }
 
 func (b2 *B2) parseCreateBucket(resp *http.Response) (*Bucket, error) {
-	bucket := &Bucket{B2: b2}
-	err := ParseResponse(resp, bucket)
+	b := &Bucket{B2: b2}
+	err := ParseResponse(resp, b)
 	if err != nil {
 		return nil, err
 	}
-	return bucket, nil
+	return b, nil
 }
 
 func (b *Bucket) Update(newBucketType BucketType) error {

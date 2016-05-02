@@ -62,23 +62,23 @@ func (b2 *B2) createB2() (*B2, error) {
 }
 
 func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
-	authResp := &authResponse{}
-	err := ParseResponse(resp, authResp)
+	ar := &authResponse{}
+	err := ParseResponse(resp, ar)
 	if err != nil {
 		return nil, err
 	}
-	b2.AuthorizationToken = authResp.AuthorizationToken
-	b2.APIURL = authResp.APIURL
-	b2.DownloadURL = authResp.DownloadURL
+	b2.AuthorizationToken = ar.AuthorizationToken
+	b2.APIURL = ar.APIURL
+	b2.DownloadURL = ar.DownloadURL
 	return b2, nil
 }
 
 func CreateRequest(method, url string, request interface{}) (*http.Request, error) {
-	reqBody, err := json.Marshal(request)
+	body, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
-	return http.NewRequest(method, url, bytes.NewReader(reqBody))
+	return http.NewRequest(method, url, bytes.NewReader(body))
 }
 
 func GetBzInfoHeaders(resp *http.Response) map[string]string {
@@ -92,32 +92,32 @@ func GetBzInfoHeaders(resp *http.Response) map[string]string {
 	return out
 }
 
-func ParseResponse(resp *http.Response, respBody interface{}) error {
+func ParseResponse(resp *http.Response, body interface{}) error {
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		return ParseResponseBody(resp, respBody)
+		return ParseResponseBody(resp, body)
 	} else {
 		return ParseResponseError(resp)
 	}
 }
 
-func ParseResponseBody(resp *http.Response, respBody interface{}) error {
-	body, err := ioutil.ReadAll(resp.Body)
+func ParseResponseBody(resp *http.Response, body interface{}) error {
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(body, respBody)
+	return json.Unmarshal(b, body)
 }
 
 func ParseResponseError(resp *http.Response) error {
-	errResp := &ResponseError{}
-	body, err := ioutil.ReadAll(resp.Body)
+	e := &ResponseError{}
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(body, errResp)
+	err = json.Unmarshal(b, e)
 	if err != nil {
 		return err
 	}
-	return errResp
+	return e
 }
