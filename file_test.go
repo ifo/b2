@@ -11,7 +11,7 @@ import (
 func TestBucket_ListfileNames(t *testing.T) {
 	bucket := testBucket()
 	bucket.ListFileNames("name", 1)
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -29,7 +29,7 @@ func TestBucket_ListFileVersions(t *testing.T) {
 	}
 
 	bucket.ListFileVersions("name", "id", 1)
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -104,7 +104,7 @@ func TestBucket_GetFileInfo(t *testing.T) {
 	}
 
 	bucket.GetFileInfo("id")
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -131,7 +131,7 @@ func TestBucket_UploadFile(t *testing.T) {
 
 	bucket.UploadURLs = []*UploadURL{testUploadURL()}
 	bucket.UploadFile("name", bytes.NewReader([]byte("cats")), nil)
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -177,7 +177,7 @@ func TestBucket_setupUploadFile(t *testing.T) {
 func TestBucket_GetUploadURL(t *testing.T) {
 	bucket := testBucket()
 	bucket.GetUploadURL()
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -225,7 +225,7 @@ func TestBucket_parseGetUploadURL(t *testing.T) {
 func TestBucket_DownloadFileByName(t *testing.T) {
 	bucket := testBucket()
 	bucket.DownloadFileByName("name")
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -234,7 +234,7 @@ func TestBucket_DownloadFileByName(t *testing.T) {
 	// public buckets don't need authorization
 	bucket.Type = AllPublic
 	bucket.DownloadFileByName("name")
-	req = bucket.B2.client.(*dummyClient).Req
+	req = bucket.B2.client.(*testClient).Request
 	auth, ok = req.Header["Authorization"]
 	if ok {
 		t.Errorf("Expected auth to be empty, instead got %s", auth)
@@ -244,7 +244,7 @@ func TestBucket_DownloadFileByName(t *testing.T) {
 func TestBucket_DownloadFileByID(t *testing.T) {
 	bucket := testBucket()
 	bucket.DownloadFileByID("id")
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -253,7 +253,7 @@ func TestBucket_DownloadFileByID(t *testing.T) {
 	// public buckets don't need authorization
 	bucket.Type = AllPublic
 	bucket.DownloadFileByID("id")
-	req = bucket.B2.client.(*dummyClient).Req
+	req = bucket.B2.client.(*testClient).Request
 	auth, ok = req.Header["Authorization"]
 	if ok {
 		t.Errorf("Expected auth to be empty, instead got %s", auth)
@@ -321,7 +321,7 @@ func TestBucket_parseFile(t *testing.T) {
 func TestBucket_HideFile(t *testing.T) {
 	bucket := testBucket()
 	bucket.HideFile("name")
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -331,7 +331,7 @@ func TestBucket_HideFile(t *testing.T) {
 func TestBucket_DeleteFileVersion(t *testing.T) {
 	bucket := testBucket()
 	bucket.DeleteFileVersion("name", "id")
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)

@@ -9,7 +9,7 @@ import (
 func TestB2_ListBuckets(t *testing.T) {
 	b2 := testB2()
 	b2.ListBuckets()
-	req := b2.client.(*dummyClient).Req
+	req := b2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != b2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", b2.AuthorizationToken, auth)
@@ -53,7 +53,7 @@ func TestB2_parseListBuckets(t *testing.T) {
 func TestB2_CreateBucket(t *testing.T) {
 	b2 := testB2()
 	b2.CreateBucket("name", AllPrivate)
-	req := b2.client.(*dummyClient).Req
+	req := b2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != b2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", b2.AuthorizationToken, auth)
@@ -94,7 +94,7 @@ func TestB2_parseCreateBucket(t *testing.T) {
 func TestBucket_Update(t *testing.T) {
 	bucket := testBucket()
 	bucket.Update(AllPrivate)
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)
@@ -136,7 +136,7 @@ func TestBucket_parseUpdate(t *testing.T) {
 func TestBucket_Delete(t *testing.T) {
 	bucket := testBucket()
 	bucket.Delete()
-	req := bucket.B2.client.(*dummyClient).Req
+	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {
 		t.Errorf("Expected auth to be %s, instead got %s", bucket.B2.AuthorizationToken, auth)

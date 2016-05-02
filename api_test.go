@@ -12,7 +12,7 @@ func TestB2_createB2(t *testing.T) {
 	b2 := testB2()
 	b2.createB2()
 
-	req := b2.client.(*dummyClient).Req
+	req := b2.client.(*testClient).Request
 	username, password, ok := req.BasicAuth()
 	if !ok {
 		t.Fatal("Expected getting Basic Auth to be successful")
@@ -116,12 +116,12 @@ func TestGetBzInfoHeaders(t *testing.T) {
 	}
 }
 
-type dummyClient struct {
-	Req *http.Request
+type testClient struct {
+	Request *http.Request
 }
 
-func (dc *dummyClient) Do(req *http.Request) (*http.Response, error) {
-	dc.Req = req
+func (dc *testClient) Do(r *http.Request) (*http.Response, error) {
+	dc.Request = r
 	return testResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`), nil
 }
 
@@ -131,7 +131,7 @@ func testB2() *B2 {
 		AuthorizationToken: "token",
 		APIURL:             "https://api900.backblaze.com",
 		DownloadURL:        "https://f900.backblaze.com",
-		client:             &dummyClient{},
+		client:             &testClient{},
 	}
 }
 
