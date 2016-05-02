@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func Test_Bucket_ListfileNames(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_ListfileNames(t *testing.T) {
+	bucket := testBucket()
 	bucket.ListFileNames("name", 1)
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -18,8 +18,8 @@ func Test_Bucket_ListfileNames(t *testing.T) {
 	}
 }
 
-func Test_Bucket_ListFileVersions(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_ListFileVersions(t *testing.T) {
+	bucket := testBucket()
 	resp, err := bucket.ListFileVersions("", "id", 1)
 	if err == nil {
 		t.Error("Expected err to exist")
@@ -36,19 +36,18 @@ func Test_Bucket_ListFileVersions(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseListFile(t *testing.T) {
+func TestBucket_parseListFile(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 	setupFiles := ""
 	for i := range fileAction {
-		setupFiles += createTestFileJSON(i, fileAction[i], nil)
-		if i != len(fileAction)-1 {
-			setupFiles += ","
-		}
+		setupFiles += testFileJSON(i, fileAction[i], nil)
+		setupFiles += ","
 	}
-	resp := createTestResponse(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
+	setupFiles = setupFiles[:len(setupFiles)-1]
+	resp := testResponse(200, fmt.Sprintf(`{"files":[%s],"nextFileId":"id%d","nextFileName":"name%d"}`,
 		setupFiles, len(fileAction), len(fileAction)))
 
-	bucket := createTestBucket()
+	bucket := testBucket()
 	fileList, err := bucket.parseListFile(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -84,7 +83,7 @@ func Test_Bucket_parseListFile(t *testing.T) {
 		}
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
 		fileList, err := bucket.parseListFile(resp)
 		checkResponseError(err, 400+i, t)
@@ -94,8 +93,8 @@ func Test_Bucket_parseListFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_GetFileInfo(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_GetFileInfo(t *testing.T) {
+	bucket := testBucket()
 	resp, err := bucket.GetFileInfo("")
 	if err.Error() != "No fileID provided" {
 		t.Errorf(`Expected "No fileID provided", instead got %s`, err)
@@ -112,8 +111,8 @@ func Test_Bucket_GetFileInfo(t *testing.T) {
 	}
 }
 
-func Test_Bucket_UploadFile(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_UploadFile(t *testing.T) {
+	bucket := testBucket()
 	resp, err := bucket.UploadFile("", nil, nil)
 	if err == nil {
 		t.Error("Expected err to exist")
@@ -130,7 +129,7 @@ func Test_Bucket_UploadFile(t *testing.T) {
 		t.Errorf("Expected resp to be nil, instead got %+v", resp)
 	}
 
-	bucket.UploadURLs = []*UploadURL{createTestUploadURL()}
+	bucket.UploadURLs = []*UploadURL{testUploadURL()}
 	bucket.UploadFile("name", bytes.NewReader([]byte("cats")), nil)
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -139,7 +138,7 @@ func Test_Bucket_UploadFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_setupUploadFile(t *testing.T) {
+func TestBucket_setupUploadFile(t *testing.T) {
 	fileName := "cats.txt"
 	fileData := bytes.NewReader([]byte("cats cats cats cats"))
 	fileInfo := map[string]string{
@@ -161,7 +160,7 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 		{URL: "https://example.com/1", AuthorizationToken: "token1", Expiration: time.Now().UTC()}, // expired
 		{URL: "https://example.com/2", AuthorizationToken: "token2", Expiration: time.Now().UTC().Add(1 * time.Hour)},
 	}
-	bucket := createTestBucket()
+	bucket := testBucket()
 	bucket.UploadURLs = uploadURLs
 	req, err := bucket.setupUploadFile(fileName, fileData, fileInfo)
 	if err != nil {
@@ -175,8 +174,8 @@ func Test_Bucket_setupUploadFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_GetUploadURL(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_GetUploadURL(t *testing.T) {
+	bucket := testBucket()
 	bucket.GetUploadURL()
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -185,11 +184,11 @@ func Test_Bucket_GetUploadURL(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseGetUploadURL(t *testing.T) {
+func TestBucket_parseGetUploadURL(t *testing.T) {
 	uploadURLStr := "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id"
-	resp := createTestResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadURLStr))
+	resp := testResponse(200, fmt.Sprintf(`{"bucketId":"id","uploadUrl":"%s","authorizationToken":"token"}`, uploadURLStr))
 
-	bucket := createTestBucket()
+	bucket := testBucket()
 	uploadURL, err := bucket.parseGetUploadURL(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -212,9 +211,9 @@ func Test_Bucket_parseGetUploadURL(t *testing.T) {
 		t.Error("Expected bucket's first uploadURL to be uploadURL, instead was", bucket.UploadURLs[0])
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
-		bucket := createTestBucket()
+		bucket := testBucket()
 		uploadURL, err := bucket.parseGetUploadURL(resp)
 		checkResponseError(err, 400+i, t)
 		if uploadURL != nil {
@@ -223,8 +222,8 @@ func Test_Bucket_parseGetUploadURL(t *testing.T) {
 	}
 }
 
-func Test_Bucket_DownloadFileByName(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_DownloadFileByName(t *testing.T) {
+	bucket := testBucket()
 	bucket.DownloadFileByName("name")
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -242,8 +241,8 @@ func Test_Bucket_DownloadFileByName(t *testing.T) {
 	}
 }
 
-func Test_Bucket_DownloadFileByID(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_DownloadFileByID(t *testing.T) {
+	bucket := testBucket()
 	bucket.DownloadFileByID("id")
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -261,7 +260,7 @@ func Test_Bucket_DownloadFileByID(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseFile(t *testing.T) {
+func TestBucket_parseFile(t *testing.T) {
 	headers := map[string][]string{
 		"X-Bz-File-Id":      {"1"},
 		"X-Bz-File-Name":    {"cats.txt"},
@@ -270,10 +269,10 @@ func Test_Bucket_parseFile(t *testing.T) {
 		"Content-Type":      {"text/plain"},
 	}
 	fileData := "cats cats cats cats"
-	resp := createTestResponse(200, fileData)
+	resp := testResponse(200, fileData)
 	resp.Header = headers
 
-	bucket := createTestBucket()
+	bucket := testBucket()
 	file, err := bucket.parseFile(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -308,9 +307,9 @@ func Test_Bucket_parseFile(t *testing.T) {
 		t.Errorf("Expected file.Meta.bucket to be bucket, instead got %+v", file.Meta.Bucket)
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
-		bucket := createTestBucket()
+		bucket := testBucket()
 		uploadURL, err := bucket.parseFile(resp)
 		checkResponseError(err, 400+i, t)
 		if uploadURL != nil {
@@ -319,8 +318,8 @@ func Test_Bucket_parseFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_HideFile(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_HideFile(t *testing.T) {
+	bucket := testBucket()
 	bucket.HideFile("name")
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -329,8 +328,8 @@ func Test_Bucket_HideFile(t *testing.T) {
 	}
 }
 
-func Test_Bucket_DeleteFileVersion(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_DeleteFileVersion(t *testing.T) {
+	bucket := testBucket()
 	bucket.DeleteFileVersion("name", "id")
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -339,13 +338,13 @@ func Test_Bucket_DeleteFileVersion(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseFileMeta(t *testing.T) {
+func TestBucket_parseFileMeta(t *testing.T) {
 	fileAction := []Action{ActionUpload, ActionHide, ActionStart}
 
 	for i := range fileAction {
-		resp := createTestResponse(200, createTestFileJSON(i, fileAction[i], nil))
+		resp := testResponse(200, testFileJSON(i, fileAction[i], nil))
 
-		bucket := createTestBucket()
+		bucket := testBucket()
 
 		fileMeta, err := bucket.parseFileMeta(resp)
 		if err != nil {
@@ -378,9 +377,9 @@ func Test_Bucket_parseFileMeta(t *testing.T) {
 		}
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
-		bucket := createTestBucket()
+		bucket := testBucket()
 		fileMeta, err := bucket.parseFileMeta(resp)
 		checkResponseError(err, 400+i, t)
 		if fileMeta != nil {
@@ -388,8 +387,8 @@ func Test_Bucket_parseFileMeta(t *testing.T) {
 		}
 	}
 }
-func Test_Bucket_cleanUploadURLs(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_cleanUploadURLs(t *testing.T) {
+	bucket := testBucket()
 
 	times := []time.Time{
 		time.Now().UTC(),
@@ -416,7 +415,7 @@ func Test_Bucket_cleanUploadURLs(t *testing.T) {
 	}
 }
 
-func createTestFileJSON(num int, action Action, fileInfo map[string]string) string {
+func testFileJSON(num int, action Action, fileInfo map[string]string) string {
 	file := FileMeta{
 		ID:              fmt.Sprintf("id%d", num),
 		Name:            fmt.Sprintf("name%d", num),
@@ -432,7 +431,7 @@ func createTestFileJSON(num int, action Action, fileInfo map[string]string) stri
 	return string(fileJSON)
 }
 
-func createTestUploadURL() *UploadURL {
+func testUploadURL() *UploadURL {
 	return &UploadURL{
 		URL:                "https://eg.backblaze.com/b2api/v1/b2_upload_file?cvt=eg&bucket=id",
 		AuthorizationToken: "token",

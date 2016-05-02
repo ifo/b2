@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func Test_B2_ListBuckets(t *testing.T) {
-	b2 := createTestB2()
+func TestB2_ListBuckets(t *testing.T) {
+	b2 := testB2()
 	b2.ListBuckets()
 	req := b2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -16,9 +16,8 @@ func Test_B2_ListBuckets(t *testing.T) {
 	}
 }
 
-func Test_parseListBuckets(t *testing.T) {
-	resp := createTestResponse(200, `{"buckets":
-[{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
+func TestB2_parseListBuckets(t *testing.T) {
+	resp := testResponse(200, `{"buckets":[{"bucketId":"id","accountId":"id","bucketName":"name","bucketType":"allPrivate"}]}`)
 	b2 := &B2{}
 	buckets, err := b2.parseListBuckets(resp)
 	if err != nil {
@@ -41,7 +40,7 @@ func Test_parseListBuckets(t *testing.T) {
 		t.Errorf("Expected bucket B2 to be *b2, instead got %+v", *buckets[0].B2)
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
 		buckets, err := b2.parseListBuckets(resp)
 		checkResponseError(err, 400+i, t)
@@ -51,8 +50,8 @@ func Test_parseListBuckets(t *testing.T) {
 	}
 }
 
-func Test_B2_CreateBucket(t *testing.T) {
-	b2 := createTestB2()
+func TestB2_CreateBucket(t *testing.T) {
+	b2 := testB2()
 	b2.CreateBucket("name", AllPrivate)
 	req := b2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -61,9 +60,8 @@ func Test_B2_CreateBucket(t *testing.T) {
 	}
 }
 
-func Test_B2_parseCreateBucket(t *testing.T) {
-	resp := createTestResponse(200,
-		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPrivate"}`)
+func TestB2_parseCreateBucket(t *testing.T) {
+	resp := testResponse(200, `{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPrivate"}`)
 	b2 := &B2{}
 	bucket, err := b2.parseCreateBucket(resp)
 	if err != nil {
@@ -83,7 +81,7 @@ func Test_B2_parseCreateBucket(t *testing.T) {
 		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
 		buckets, err := b2.parseCreateBucket(resp)
 		checkResponseError(err, 400+i, t)
@@ -93,8 +91,8 @@ func Test_B2_parseCreateBucket(t *testing.T) {
 	}
 }
 
-func Test_Bucket_Update(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_Update(t *testing.T) {
+	bucket := testBucket()
 	bucket.Update(AllPrivate)
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -103,10 +101,9 @@ func Test_Bucket_Update(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseUpdate(t *testing.T) {
-	resp := createTestResponse(200,
-		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
-	bucket := createTestBucket()
+func TestBucket_parseUpdate(t *testing.T) {
+	resp := testResponse(200, `{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
+	bucket := testBucket()
 	err := bucket.parseUpdate(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
@@ -125,9 +122,9 @@ func Test_Bucket_parseUpdate(t *testing.T) {
 		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
-		bucket := createTestBucket()
+		bucket := testBucket()
 		err := bucket.parseUpdate(resp)
 		checkResponseError(err, 400+i, t)
 		if bucket.BucketType != AllPrivate {
@@ -136,8 +133,8 @@ func Test_Bucket_parseUpdate(t *testing.T) {
 	}
 }
 
-func Test_Bucket_Delete(t *testing.T) {
-	bucket := createTestBucket()
+func TestBucket_Delete(t *testing.T) {
+	bucket := testBucket()
 	bucket.Delete()
 	req := bucket.B2.client.(*dummyClient).Req
 	auth, ok := req.Header["Authorization"]
@@ -146,25 +143,23 @@ func Test_Bucket_Delete(t *testing.T) {
 	}
 }
 
-func Test_Bucket_parseDelete(t *testing.T) {
-	resp := createTestResponse(200,
-		`{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
-
-	bucket := createTestBucket()
+func TestBucket_parseDelete(t *testing.T) {
+	resp := testResponse(200, `{"bucketId":"id","accountId":"id","bucketName":"bucket","bucketType":"allPublic"}`)
+	bucket := testBucket()
 	err := bucket.parseDelete(resp)
 	if err != nil {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
-		bucket := createTestBucket()
+		bucket := testBucket()
 		err := bucket.parseDelete(resp)
 		checkResponseError(err, 400+i, t)
 	}
 }
 
-func Test_B2_createBucketRequest(t *testing.T) {
+func TestB2_createBucketRequest(t *testing.T) {
 	b2 := &B2{APIURL: "http://example.com"}
 	reqs := [][]byte{}
 	fields := [][]byte{
@@ -237,12 +232,12 @@ func Test_B2_createBucketRequest(t *testing.T) {
 	}
 }
 
-func createTestBucket() *Bucket {
+func testBucket() *Bucket {
 	return &Bucket{
 		BucketID:   "id",
 		BucketName: "bucket",
 		BucketType: AllPrivate,
-		B2:         createTestB2(),
+		B2:         testB2(),
 	}
 }
 

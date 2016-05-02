@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func Test_B2_createB2(t *testing.T) {
-	b2 := createTestB2()
+func TestB2_createB2(t *testing.T) {
+	b2 := testB2()
 	b2.createB2()
 
 	req := b2.client.(*dummyClient).Req
@@ -25,8 +25,8 @@ func Test_B2_createB2(t *testing.T) {
 	}
 }
 
-func Test_B2_parseCreateB2Response(t *testing.T) {
-	resp := createTestResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
+func TestB2_parseCreateB2Response(t *testing.T) {
+	resp := testResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 
 	b := &B2{AccountID: "1", ApplicationKey: "key"}
 	b, err := b.parseCreateB2Response(resp)
@@ -47,7 +47,7 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 		t.Errorf(`Expected DownloadURL to be "/", instead got %s`, b.DownloadURL)
 	}
 
-	resps := createTestResponseErrors()
+	resps := testResponseErrors()
 	for i, resp := range resps {
 		b := &B2{AccountID: "1", ApplicationKey: "key"}
 		b, err := b.parseCreateB2Response(resp)
@@ -58,7 +58,7 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 	}
 }
 
-func Test_B2_CreateRequest(t *testing.T) {
+func TestCreateRequest(t *testing.T) {
 	methods := []string{"GET", "POST", "BAD METHOD"}
 	url := "https://example.com"
 	reqBody := struct{ a int }{a: 1}
@@ -92,7 +92,7 @@ func Test_B2_CreateRequest(t *testing.T) {
 	}
 }
 
-func Test_GetBzInfoHeaders(t *testing.T) {
+func TestGetBzInfoHeaders(t *testing.T) {
 	headers := map[string][]string{
 		"Content-Type":      {"kittens"},
 		"X-Bz-Info-kittens": {"yes"},
@@ -122,10 +122,10 @@ type dummyClient struct {
 
 func (dc *dummyClient) Do(req *http.Request) (*http.Response, error) {
 	dc.Req = req
-	return createTestResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`), nil
+	return testResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`), nil
 }
 
-func createTestB2() *B2 {
+func testB2() *B2 {
 	return &B2{
 		AccountID:          "id",
 		AuthorizationToken: "token",
@@ -135,17 +135,17 @@ func createTestB2() *B2 {
 	}
 }
 
-func createTestResponse(statusCode int, body string) *http.Response {
+func testResponse(statusCode int, body string) *http.Response {
 	return &http.Response{
 		StatusCode: statusCode,
 		Body:       ioutil.NopCloser(strings.NewReader(body)),
 	}
 }
 
-func createTestResponseErrors() []*http.Response {
+func testResponseErrors() []*http.Response {
 	return []*http.Response{
-		createTestResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`),
-		createTestResponse(401, `{"status":401,"code":"nope","message":"nope nope"}`),
+		testResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`),
+		testResponse(401, `{"status":401,"code":"nope","message":"nope nope"}`),
 	}
 }
 
