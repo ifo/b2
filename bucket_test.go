@@ -27,14 +27,14 @@ func TestB2_parseListBuckets(t *testing.T) {
 	if len(buckets) != 1 {
 		t.Errorf("Expected one bucket, instead got %d", len(buckets))
 	}
-	if buckets[0].BucketID != "id" {
-		t.Errorf(`Expected "id", instead got %s`, buckets[0].BucketID)
+	if buckets[0].ID != "id" {
+		t.Errorf(`Expected "id", instead got %s`, buckets[0].ID)
 	}
-	if buckets[0].BucketName != "name" {
-		t.Errorf(`Expected "name", instead got %s`, buckets[0].BucketName)
+	if buckets[0].Name != "name" {
+		t.Errorf(`Expected "name", instead got %s`, buckets[0].Name)
 	}
-	if buckets[0].BucketType != AllPrivate {
-		t.Errorf("Expected AllPrivate, instead got %+v", buckets[0].BucketType)
+	if buckets[0].Type != AllPrivate {
+		t.Errorf("Expected AllPrivate, instead got %+v", buckets[0].Type)
 	}
 	if *buckets[0].B2 != *b2 {
 		t.Errorf("Expected bucket B2 to be *b2, instead got %+v", *buckets[0].B2)
@@ -68,14 +68,14 @@ func TestB2_parseCreateBucket(t *testing.T) {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	if bucket.BucketID != "id" {
-		t.Errorf(`Expected "id", instead got %s`, bucket.BucketID)
+	if bucket.ID != "id" {
+		t.Errorf(`Expected "id", instead got %s`, bucket.ID)
 	}
-	if bucket.BucketName != "bucket" {
-		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
+	if bucket.Name != "bucket" {
+		t.Errorf(`Expected "bucket", instead got %s`, bucket.Name)
 	}
-	if bucket.BucketType != AllPrivate {
-		t.Errorf("Expected bucket type to be private, instead got %s", bucket.BucketType)
+	if bucket.Type != AllPrivate {
+		t.Errorf("Expected bucket type to be private, instead got %s", bucket.Type)
 	}
 	if bucket.B2 != b2 {
 		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
@@ -110,16 +110,16 @@ func TestBucket_parseUpdate(t *testing.T) {
 	}
 
 	// bucket type should change
-	if bucket.BucketType != AllPublic {
-		t.Errorf("Expected bucket type to be private, instead got %s", bucket.BucketType)
+	if bucket.Type != AllPublic {
+		t.Errorf("Expected bucket type to be private, instead got %s", bucket.Type)
 	}
 
 	// nothing else should have changed
-	if bucket.BucketID != "id" {
-		t.Errorf(`Expected "id", instead got %s`, bucket.BucketID)
+	if bucket.ID != "id" {
+		t.Errorf(`Expected "id", instead got %s`, bucket.ID)
 	}
-	if bucket.BucketName != "bucket" {
-		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
+	if bucket.Name != "bucket" {
+		t.Errorf(`Expected "bucket", instead got %s`, bucket.Name)
 	}
 
 	resps := testResponseErrors()
@@ -127,8 +127,8 @@ func TestBucket_parseUpdate(t *testing.T) {
 		bucket := testBucket()
 		err := bucket.parseUpdate(resp)
 		checkResponseError(err, 400+i, t)
-		if bucket.BucketType != AllPrivate {
-			t.Errorf("Expected bucket type to be private, instead got %+v", bucket.BucketType)
+		if bucket.Type != AllPrivate {
+			t.Errorf("Expected bucket type to be private, instead got %+v", bucket.Type)
 		}
 	}
 }
@@ -234,10 +234,10 @@ func TestB2_createBucketRequest(t *testing.T) {
 
 func testBucket() *Bucket {
 	return &Bucket{
-		BucketID:   "id",
-		BucketName: "bucket",
-		BucketType: AllPrivate,
-		B2:         testB2(),
+		ID:   "id",
+		Name: "bucket",
+		Type: AllPrivate,
+		B2:   testB2(),
 	}
 }
 

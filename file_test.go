@@ -232,7 +232,7 @@ func TestBucket_DownloadFileByName(t *testing.T) {
 	}
 
 	// public buckets don't need authorization
-	bucket.BucketType = AllPublic
+	bucket.Type = AllPublic
 	bucket.DownloadFileByName("name")
 	req = bucket.B2.client.(*dummyClient).Req
 	auth, ok = req.Header["Authorization"]
@@ -251,7 +251,7 @@ func TestBucket_DownloadFileByID(t *testing.T) {
 	}
 
 	// public buckets don't need authorization
-	bucket.BucketType = AllPublic
+	bucket.Type = AllPublic
 	bucket.DownloadFileByID("id")
 	req = bucket.B2.client.(*dummyClient).Req
 	auth, ok = req.Header["Authorization"]

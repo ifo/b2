@@ -57,7 +57,7 @@ type fileMetaRequest struct {
 
 func (b *Bucket) ListFileNames(startFileName string, maxFileCount int64) (*ListFileResponse, error) {
 	requestBody := listFileRequest{
-		BucketID:      b.BucketID,
+		BucketID:      b.ID,
 		StartFileName: startFileName,
 		MaxFileCount:  maxFileCount,
 	}
@@ -79,7 +79,7 @@ func (b *Bucket) ListFileVersions(startFileName, startFileID string, maxFileCoun
 	}
 
 	requestBody := listFileRequest{
-		BucketID:      b.BucketID,
+		BucketID:      b.ID,
 		StartFileName: startFileName,
 		StartFileID:   startFileID,
 		MaxFileCount:  maxFileCount,
@@ -186,7 +186,7 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 }
 
 func (b *Bucket) GetUploadURL() (*UploadURL, error) {
-	requestBody := fmt.Sprintf(`{"bucketId":"%s"}`, b.BucketID)
+	requestBody := fmt.Sprintf(`{"bucketId":"%s"}`, b.ID)
 	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_get_upload_url", requestBody)
 	if err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func (b *Bucket) DownloadFileByName(fileName string) (*File, error) {
 		return nil, err
 	}
 
-	if b.BucketType == AllPrivate {
+	if b.Type == AllPrivate {
 		req.Header.Set("Authorization", b.B2.AuthorizationToken)
 	}
 
@@ -235,7 +235,7 @@ func (b *Bucket) DownloadFileByID(fileID string) (*File, error) {
 		return nil, err
 	}
 
-	if b.BucketType == AllPrivate {
+	if b.Type == AllPrivate {
 		req.Header.Set("Authorization", b.B2.AuthorizationToken)
 	}
 
@@ -288,7 +288,7 @@ func (b *Bucket) parseFile(resp *http.Response) (*File, error) {
 
 func (b *Bucket) HideFile(fileName string) (*FileMeta, error) {
 	requestBody := fileMetaRequest{
-		BucketID: b.BucketID,
+		BucketID: b.ID,
 		FileName: fileName,
 	}
 	req, err := CreateRequest("POST", b.B2.APIURL+"/b2api/v1/b2_hide_file", requestBody)

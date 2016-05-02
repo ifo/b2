@@ -6,9 +6,9 @@ import (
 )
 
 type Bucket struct {
-	BucketID   string       `json:"bucketId"`
-	BucketName string       `json:"bucketName"`
-	BucketType BucketType   `json:"bucketType"`
+	ID         string       `json:"bucketId"`
+	Name       string       `json:"bucketName"`
+	Type       BucketType   `json:"bucketType"`
 	UploadURLs []*UploadURL `json:"-"`
 	B2         *B2          `json:"-"`
 }
@@ -88,7 +88,7 @@ func (b2 *B2) parseCreateBucket(resp *http.Response) (*Bucket, error) {
 }
 
 func (b *Bucket) Update(newBucketType BucketType) error {
-	br := bucketRequest{BucketID: b.BucketID, BucketType: newBucketType}
+	br := bucketRequest{BucketID: b.ID, BucketType: newBucketType}
 	req, err := b.B2.createBucketRequest("/b2api/v1/b2_update_bucket", br)
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (b *Bucket) parseUpdate(resp *http.Response) error {
 }
 
 func (b *Bucket) Delete() error {
-	br := bucketRequest{BucketID: b.BucketID}
+	br := bucketRequest{BucketID: b.ID}
 	req, err := b.B2.createBucketRequest("/b2api/v1/b2_delete_bucket", br)
 	if err != nil {
 		return err
