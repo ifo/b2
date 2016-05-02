@@ -63,7 +63,7 @@ func (b2 *B2) createB2() (*B2, error) {
 
 func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
 	ar := &authResponse{}
-	err := ParseResponse(resp, ar)
+	err := parseResponse(resp, ar)
 	if err != nil {
 		return nil, err
 	}
@@ -92,16 +92,16 @@ func GetBzInfoHeaders(resp *http.Response) map[string]string {
 	return out
 }
 
-func ParseResponse(resp *http.Response, body interface{}) error {
+func parseResponse(resp *http.Response, body interface{}) error {
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		return ParseResponseBody(resp, body)
+		return parseResponseBody(resp, body)
 	} else {
-		return ParseResponseError(resp)
+		return parseResponseError(resp)
 	}
 }
 
-func ParseResponseBody(resp *http.Response, body interface{}) error {
+func parseResponseBody(resp *http.Response, body interface{}) error {
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func ParseResponseBody(resp *http.Response, body interface{}) error {
 	return json.Unmarshal(b, body)
 }
 
-func ParseResponseError(resp *http.Response) error {
+func parseResponseError(resp *http.Response) error {
 	e := &ResponseError{}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

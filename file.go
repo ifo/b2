@@ -98,7 +98,7 @@ func (b *Bucket) ListFileVersions(startName, startID string, maxCount int64) (*L
 
 func (b *Bucket) parseListFile(resp *http.Response) (*ListFileResponse, error) {
 	lfr := &ListFileResponse{}
-	err := ParseResponse(resp, lfr)
+	err := parseResponse(resp, lfr)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (b *Bucket) GetUploadURL() (*UploadURL, error) {
 
 func (b *Bucket) parseGetUploadURL(resp *http.Response) (*UploadURL, error) {
 	url := &UploadURL{Expiration: time.Now().UTC().Add(24 * time.Hour)}
-	err := ParseResponse(resp, url)
+	err := parseResponse(resp, url)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (b *Bucket) parseFile(resp *http.Response) (*File, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, ParseResponseError(resp)
+		return nil, parseResponseError(resp)
 	}
 
 	bts, err := ioutil.ReadAll(resp.Body)
@@ -322,7 +322,7 @@ func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
 
 func (b *Bucket) parseFileMeta(resp *http.Response) (*FileMeta, error) {
 	fm := &FileMeta{}
-	err := ParseResponse(resp, fm)
+	err := parseResponse(resp, fm)
 	if err != nil {
 		return nil, err
 	}
