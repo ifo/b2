@@ -41,10 +41,10 @@ func Test_parseListBuckets(t *testing.T) {
 		t.Errorf("Expected bucket B2 to be *b2, instead got %+v", *buckets[0].B2)
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		buckets, err := b2.parseListBuckets(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if buckets != nil {
 			t.Errorf("Expected b2 to be nil, instead got %+v", b2)
 		}
@@ -83,10 +83,10 @@ func Test_B2_parseCreateBucket(t *testing.T) {
 		t.Errorf("Expected bucket B2 to be test B2, instead got %+v", bucket.B2)
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		buckets, err := b2.parseCreateBucket(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if buckets != nil {
 			t.Errorf("Expected b2 to be nil, instead got %+v", b2)
 		}
@@ -125,11 +125,11 @@ func Test_Bucket_parseUpdate(t *testing.T) {
 		t.Errorf(`Expected "bucket", instead got %s`, bucket.BucketName)
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
 		err := bucket.parseUpdate(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if bucket.BucketType != AllPrivate {
 			t.Errorf("Expected bucket type to be private, instead got %+v", bucket.BucketType)
 		}
@@ -156,11 +156,11 @@ func Test_Bucket_parseDelete(t *testing.T) {
 		t.Fatalf("Expected no error, instead got %s", err)
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
 		err := bucket.parseDelete(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 	}
 }
 

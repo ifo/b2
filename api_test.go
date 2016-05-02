@@ -47,11 +47,11 @@ func Test_B2_parseCreateB2Response(t *testing.T) {
 		t.Errorf(`Expected DownloadUrl to be "/", instead got %s`, b.DownloadUrl)
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		b := &B2{AccountID: "1", ApplicationKey: "key"}
 		b, err := b.parseCreateB2Response(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if b != nil {
 			t.Errorf("Expected b to be nil, instead got %+v", b)
 		}
@@ -142,14 +142,14 @@ func createTestResponse(statusCode int, body string) *http.Response {
 	}
 }
 
-func createTestErrorResponses() []*http.Response {
+func createTestResponseErrors() []*http.Response {
 	return []*http.Response{
 		createTestResponse(400, `{"status":400,"code":"nope","message":"nope nope"}`),
 		createTestResponse(401, `{"status":401,"code":"nope","message":"nope nope"}`),
 	}
 }
 
-func testErrorResponse(err error, code int, t *testing.T) {
+func checkResponseError(err error, code int, t *testing.T) {
 	if err == nil {
 		t.Error("Expected error, no error received")
 	} else if err.Error() != fmt.Sprintf("Status: %d, Code: nope, Message: nope nope", code) {

@@ -29,13 +29,13 @@ type authResponse struct {
 	DownloadUrl        string `json:"downloadUrl"`
 }
 
-type ErrorResponse struct {
+type ResponseError struct {
 	Status  int64  `json:"status"`
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e ErrorResponse) Error() string {
+func (e ResponseError) Error() string {
 	return fmt.Sprintf("Status: %d, Code: %s, Message: %s", e.Status, e.Code, e.Message)
 }
 
@@ -54,12 +54,10 @@ func (b2 *B2) createB2() (*B2, error) {
 		return nil, err
 	}
 	req.SetBasicAuth(b2.AccountID, b2.ApplicationKey)
-
 	resp, err := b2.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-
 	return b2.parseCreateB2Response(resp)
 }
 
@@ -69,11 +67,9 @@ func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	b2.AuthorizationToken = authResp.AuthorizationToken
 	b2.ApiUrl = authResp.ApiUrl
 	b2.DownloadUrl = authResp.DownloadUrl
-
 	return b2, nil
 }
 
@@ -101,7 +97,7 @@ func ParseResponse(resp *http.Response, respBody interface{}) error {
 	if resp.StatusCode == 200 {
 		return ParseResponseBody(resp, respBody)
 	} else {
-		return ParseErrorResponse(resp)
+		return ParseResponseError(resp)
 	}
 }
 
@@ -113,8 +109,8 @@ func ParseResponseBody(resp *http.Response, respBody interface{}) error {
 	return json.Unmarshal(body, respBody)
 }
 
-func ParseErrorResponse(resp *http.Response) error {
-	errResp := &ErrorResponse{}
+func ParseResponseError(resp *http.Response) error {
+	errResp := &ResponseError{}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err

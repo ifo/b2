@@ -84,10 +84,10 @@ func Test_Bucket_parseListFile(t *testing.T) {
 		}
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		fileList, err := bucket.parseListFile(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if fileList != nil {
 			t.Errorf("Expected fileList to be empty, instead got %+v", fileList)
 		}
@@ -212,11 +212,11 @@ func Test_Bucket_parseGetUploadUrl(t *testing.T) {
 		t.Error("Expected bucket's first uploadUrl to be uploadUrl, instead was", bucket.UploadUrls[0])
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
 		uploadUrl, err := bucket.parseGetUploadUrl(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if uploadUrl != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
 		}
@@ -308,11 +308,11 @@ func Test_Bucket_parseFile(t *testing.T) {
 		t.Errorf("Expected file.Meta.bucket to be bucket, instead got %+v", file.Meta.Bucket)
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
 		uploadUrl, err := bucket.parseFile(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if uploadUrl != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", uploadUrl)
 		}
@@ -378,11 +378,11 @@ func Test_Bucket_parseFileMeta(t *testing.T) {
 		}
 	}
 
-	resps := createTestErrorResponses()
+	resps := createTestResponseErrors()
 	for i, resp := range resps {
 		bucket := createTestBucket()
 		fileMeta, err := bucket.parseFileMeta(resp)
-		testErrorResponse(err, 400+i, t)
+		checkResponseError(err, 400+i, t)
 		if fileMeta != nil {
 			t.Errorf("Expected response to be empty, instead got %+v", fileMeta)
 		}
