@@ -110,9 +110,8 @@ func parseResponse(resp *http.Response, body interface{}) error {
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		return parseResponseBody(resp, body)
-	} else {
-		return parseAPIError(resp)
 	}
+	return parseAPIError(resp)
 }
 
 // parseResponseBody parses a successful JSON response into the body param.
