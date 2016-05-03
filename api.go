@@ -58,10 +58,10 @@ func (b2 *B2) createB2() (*B2, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b2.parseCreateB2Response(resp)
+	return b2.parseCreateB2(resp)
 }
 
-func (b2 *B2) parseCreateB2Response(resp *http.Response) (*B2, error) {
+func (b2 *B2) parseCreateB2(resp *http.Response) (*B2, error) {
 	ar := &authResponse{}
 	err := parseResponse(resp, ar)
 	if err != nil {

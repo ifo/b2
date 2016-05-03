@@ -20,11 +20,11 @@ const (
 	AllPublic  BucketType = "allPublic"
 )
 
-// TODO? include some marker of being used (maybe mutex)
 type UploadURL struct {
 	URL                string    `json:"uploadUrl"`
 	AuthorizationToken string    `json:"authorizationToken"`
 	Expiration         time.Time `json:"-"`
+	// TODO? include some marker of being used (maybe mutex)
 }
 
 type listBucketsResponse struct {

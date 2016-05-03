@@ -304,6 +304,7 @@ func (b *Bucket) HideFile(name string) (*FileMeta, error) {
 }
 
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
+	// TODO error when fileName or fileID are ""
 	fmr := fileMetaRequest{
 		FileName: fileName,
 		FileID:   fileID,

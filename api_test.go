@@ -25,11 +25,11 @@ func TestB2_createB2(t *testing.T) {
 	}
 }
 
-func TestB2_parseCreateB2Response(t *testing.T) {
+func TestB2_parseCreateB2(t *testing.T) {
 	resp := testResponse(200, `{"accountId":"1","authorizationToken":"1","apiUrl":"/","downloadUrl":"/"}`)
 
 	b := &B2{AccountID: "1", ApplicationKey: "key"}
-	b, err := b.parseCreateB2Response(resp)
+	b, err := b.parseCreateB2(resp)
 	if err != nil {
 		t.Fatalf("Expected err to be nil, instead got %+v", err)
 	}
@@ -50,7 +50,7 @@ func TestB2_parseCreateB2Response(t *testing.T) {
 	resps := testAPIErrors()
 	for i, resp := range resps {
 		b := &B2{AccountID: "1", ApplicationKey: "key"}
-		b, err := b.parseCreateB2Response(resp)
+		b, err := b.parseCreateB2(resp)
 		checkAPIError(err, 400+i, t)
 		if b != nil {
 			t.Errorf("Expected b to be nil, instead got %+v", b)
