@@ -113,24 +113,33 @@ func TestBucket_GetFileInfo(t *testing.T) {
 
 func TestBucket_UploadFile(t *testing.T) {
 	bucket := testBucket()
-	resp, err := bucket.UploadFile("", nil, nil)
-	if err == nil {
-		t.Error("Expected err to exist")
-	}
-	if resp != nil {
-		t.Errorf("Expected resp to be nil, instead got %+v", resp)
+	fileInfo := map[string]string{"1": "", "2": "", "3": "", "4": "", "5": "", "6": "", "7": "", "8": "", "9": "", "10": "", "11": ""}
+	file := bytes.NewReader([]byte("cats"))
+
+	m1, e1 := bucket.UploadFile("", file, nil)          // no name
+	m2, e2 := bucket.UploadFile("name", nil, nil)       // no file
+	m3, e3 := bucket.UploadFile("name", file, fileInfo) // too many fileInfo keys
+
+	badCalls := []struct {
+		M *FileMeta
+		E error
+	}{
+		{M: m1, E: e1},
+		{M: m2, E: e2},
+		{M: m3, E: e3},
 	}
 
-	resp, err = bucket.UploadFile("name", nil, nil)
-	if err == nil {
-		t.Error("Expected err to exist")
-	}
-	if resp != nil {
-		t.Errorf("Expected resp to be nil, instead got %+v", resp)
+	for _, call := range badCalls {
+		if call.E == nil {
+			t.Error("Expected err to exist")
+		}
+		if call.M != nil {
+			t.Errorf("Expected call.M to be nil, instead got %+v", call.M)
+		}
 	}
 
 	bucket.UploadURLs = []*UploadURL{testUploadURL()}
-	bucket.UploadFile("name", bytes.NewReader([]byte("cats")), nil)
+	bucket.UploadFile("name", file, nil)
 	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
 	if !ok || auth[0] != bucket.B2.AuthorizationToken {

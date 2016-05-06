@@ -157,6 +157,9 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 	if file == nil {
 		return nil, fmt.Errorf("No file data provided")
 	}
+	if len(fileInfo) > 10 {
+		return nil, fmt.Errorf("More than 10 file info keys provided")
+	}
 	req, err := b.setupUploadFile(name, file, fileInfo)
 	if err != nil {
 		return nil, err
