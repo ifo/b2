@@ -149,21 +149,23 @@ func TestBucket_UploadFile(t *testing.T) {
 }
 
 func TestBucket_setupUploadFile(t *testing.T) {
-	fileName := "cats.txt"
+	fileName := "cats√.txt"
 	fileData := bytes.NewReader([]byte("cats cats cats cats"))
 	fileInfo := map[string]string{
 		"file-cats": "yes",
 		"file-dogs": "no",
+		"file-√":    "maybe",
 	}
 
 	fileInfoCheck := map[string]string{
-		"Authorization":       "token2",
-		"X-Bz-File-Name":      "cats.txt",
-		"Content-Type":        "b2/x-auto",
-		"Content-Length":      "19",
-		"X-Bz-Content-Sha1":   "78498e5096b20e3f1c063e8740ff83d595ededb3",
-		"X-Bz-Info-file-cats": fileInfo["file-cats"],
-		"X-Bz-Info-file-dogs": fileInfo["file-dogs"],
+		"Authorization":            "token2",
+		"X-Bz-File-Name":           "cats%E2%88%9A.txt",
+		"Content-Type":             "b2/x-auto",
+		"Content-Length":           "19",
+		"X-Bz-Content-Sha1":        "78498e5096b20e3f1c063e8740ff83d595ededb3",
+		"X-Bz-Info-file-cats":      fileInfo["file-cats"],
+		"X-Bz-Info-file-dogs":      fileInfo["file-dogs"],
+		"X-Bz-Info-file-%E2%88%9A": fileInfo["file-√"],
 	}
 
 	uploadURLs := []*UploadURL{
@@ -181,6 +183,9 @@ func TestBucket_setupUploadFile(t *testing.T) {
 		if req.Header.Get(k) != v {
 			t.Errorf("Expected req header %s to be %s, instead got %s", k, v, req.Header.Get(k))
 		}
+	}
+	if req.Header.Get("X-Bz-File-Name") != "cats%E2%88%9A.txt" {
+		t.Errorf("Expected file name to be %s, instead got %s", "cats%E2%88%9A.txt", req.Header.Get("X-Bz-File-Name"))
 	}
 }
 

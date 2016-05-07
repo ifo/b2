@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -180,19 +181,19 @@ func (b *Bucket) UploadFile(name string, file io.Reader, fileInfo map[string]str
 func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[string]string) (*http.Request, error) {
 	b.cleanUploadURLs()
 
-	url := &UploadURL{}
+	uurl := &UploadURL{}
 	var err error
 	if len(b.UploadURLs) > 0 {
 		// TODO don't just pick the first usable url
-		url = b.UploadURLs[0]
+		uurl = b.UploadURLs[0]
 	} else {
-		url, err = b.GetUploadURL()
+		uurl, err = b.GetUploadURL()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	req, err := CreateRequest("POST", url.URL, file)
+	req, err := CreateRequest("POST", uurl.URL, file)
 	if err != nil {
 		return nil, err
 	}
@@ -202,14 +203,13 @@ func (b *Bucket) setupUploadFile(name string, file io.Reader, fileInfo map[strin
 		return nil, err
 	}
 
-	// TODO percent-encode header values
-	req.Header.Set("Authorization", url.AuthorizationToken)
-	req.Header.Set("X-Bz-File-Name", name)
+	req.Header.Set("Authorization", uurl.AuthorizationToken)
+	req.Header.Set("X-Bz-File-Name", url.QueryEscape(name))
 	req.Header.Set("Content-Type", "b2/x-auto") // TODO include type if known
 	req.Header.Set("Content-Length", fmt.Sprintf("%d", len(bts)))
 	req.Header.Set("X-Bz-Content-Sha1", fmt.Sprintf("%x", sha1.Sum(bts)))
 	for k, v := range fileInfo {
-		req.Header.Set("X-Bz-Info-"+k, v)
+		req.Header.Set("X-Bz-Info-"+url.QueryEscape(k), v)
 	}
 	// TODO include X-Bz-Info-src_last_modified_millis
 	// TODO check for total headers being greater than 7,000 bytes
