@@ -121,20 +121,21 @@ func TestBucket_UploadFile(t *testing.T) {
 	m3, e3 := bucket.UploadFile("name", file, fileInfo) // too many fileInfo keys
 
 	badCalls := []struct {
-		M *FileMeta
-		E error
+		m        *FileMeta
+		err      error
+		expected string
 	}{
-		{M: m1, E: e1},
-		{M: m2, E: e2},
-		{M: m3, E: e3},
+		{m: m1, err: e1, expected: "No file name provided"},
+		{m: m2, err: e2, expected: "No file data provided"},
+		{m: m3, err: e3, expected: "More than 10 file info keys provided"},
 	}
 
 	for _, call := range badCalls {
-		if call.E == nil {
-			t.Error("Expected err to exist")
+		if call.err.Error() != call.expected {
+			t.Errorf("Expected err to be %s, instead got %s", call.expected, call.err.Error())
 		}
-		if call.M != nil {
-			t.Errorf("Expected call.M to be nil, instead got %+v", call.M)
+		if call.m != nil {
+			t.Errorf("Expected call.m to be nil, instead got %+v", call.m)
 		}
 	}
 
