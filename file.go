@@ -356,7 +356,13 @@ func (b *Bucket) HideFile(name string) (*FileMeta, error) {
 // If older versions of the same file exist, getting the file by name will
 // return the newest of the old versions.
 func (b *Bucket) DeleteFileVersion(fileName, fileID string) (*FileMeta, error) {
-	// TODO error when fileName or fileID are ""
+	if fileName == "" {
+		return nil, fmt.Errorf("fileName must be provided")
+	}
+	if fileID == "" {
+		return nil, fmt.Errorf("fileID must be provided")
+	}
+
 	fmr := fileMetaRequest{
 		FileName: fileName,
 		FileID:   fileID,

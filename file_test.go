@@ -345,6 +345,26 @@ func TestBucket_HideFile(t *testing.T) {
 
 func TestBucket_DeleteFileVersion(t *testing.T) {
 	bucket := testBucket()
+
+	cases := map[string]struct {
+		name        string
+		id          string
+		expectedErr string
+	}{
+		"1": {name: "", id: "id", expectedErr: "fileName must be provided"},
+		"2": {name: "name", id: "", expectedErr: "fileID must be provided"},
+	}
+
+	for num, c := range cases {
+		fm, err := bucket.DeleteFileVersion(c.name, c.id)
+		if err.Error() != c.expectedErr {
+			t.Errorf("Got %s, expected %s, case %s", c.expectedErr, err, num)
+		}
+		if fm != nil {
+			t.Errorf("Got %+v, expected nil, case %s", fm, num)
+		}
+	}
+
 	bucket.DeleteFileVersion("name", "id")
 	req := bucket.B2.client.(*testClient).Request
 	auth, ok := req.Header["Authorization"]
